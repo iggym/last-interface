@@ -1,0 +1,34 @@
+[
+  {
+    "id": "01-permission-guardrails",
+    "title": "Autonomous Permission Guardrails",
+    "summary": "How human-in-the-loop OAuth scopes and Governance-as-Code prevent rogue agentic API loops while maintaining execution speed.",
+    "tags": ["Security", "Governance", "Interactive"],
+    "date": "2026-07-21",
+    "file": "articles/01-permission-guardrails.html"
+  },
+  {
+    "id": "02-federated-agent-swarms",
+    "title": "The Swarm Architecture",
+    "summary": "Moving past single 'God Models' toward specialized multi-agent networks that collaborate on zero-copy data layers.",
+    "tags": ["Architecture", "Multi-Agent", "Canvas"],
+    "date": "2026-07-18",
+    "file": "articles/02-federated-agent-swarms.html"
+  },
+  {
+    "id": "03-zero-copy-context",
+    "title": "Zero-Copy Data Access",
+    "summary": "Why future software won't import your databases—agents will query system data in-place without moving a single byte.",
+    "tags": ["Data Systems", "Privacy", "Interactive"],
+    "date": "2026-07-15",
+    "file": "articles/03-zero-copy-context.html"
+  },
+  {
+    "id": "04-intent-translation-layer",
+    "title": "The Intent Engine",
+    "summary": "Translating natural human goals into structured execution graphs without rigid manual software inputs.",
+    "tags": ["UX", "State Graphs", "Simulation"],
+    "date": "2026-07-10",
+    "file": "articles/04-intent-translation-layer.html"
+  }
+]
