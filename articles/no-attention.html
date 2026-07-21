@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Earned Silence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;1,500&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#12141C; --panel:#1A1D28; --panel2:#20232F; --line:#2E323F;
+    --signal:#E8C77A; --alert:#D9736B; --calm:#7FA8A3;
+    --text:#EDEAE3; --muted:#8D93A6; --muted2:#5C6178;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:radial-gradient(ellipse 900px 500px at 50% -10%, rgba(232,199,122,0.06), transparent), var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.6; -webkit-font-smoothing:antialiased;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+  h1,h2{font-family:'Newsreader',serif; font-weight:600; letter-spacing:-0.01em;}
+  h1 em, h2 em{font-style:italic; color:var(--signal); font-weight:500;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:860px; margin:0 auto; padding:0 24px;}
+  section{padding:86px 0; border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted2); display:flex; align-items:center; gap:9px; margin-bottom:18px;}
+  p.lede{color:var(--muted); font-size:16.5px; max-width:600px;}
+  a{color:var(--calm);}
+  button{font-family:'Inter',sans-serif; cursor:pointer;}
+  .guess-line{font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted2); margin-top:18px; text-transform:uppercase; letter-spacing:0.03em;}
+
+  /* breathing dot signature */
+  .dot{width:9px; height:9px; border-radius:50%; background:var(--signal); flex-shrink:0; animation:breathe 3.6s ease-in-out infinite;}
+  @keyframes breathe{ 0%,100%{opacity:0.35; transform:scale(0.85);} 50%{opacity:1; transform:scale(1);} }
+
+  /* HERO */
+  .hero{padding:110px 0 90px; text-align:center;}
+  .hero h1{font-size:clamp(30px,4.6vw,48px); line-height:1.18; margin-bottom:20px;}
+  .hero p.lede{margin:0 auto 46px;}
+  .hush-dot{width:60px; height:60px; border-radius:50%; margin:0 auto; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .hush-dot .core{width:14px; height:14px; border-radius:50%; background:var(--signal); animation:breathe 3.6s ease-in-out infinite; box-shadow:0 0 24px rgba(232,199,122,0.35);}
+  .hush-caption{margin-top:16px; font-family:'IBM Plex Mono',monospace; font-size:12.5px; color:var(--muted2); min-height:18px; transition:opacity 0.3s;}
+
+  /* PANEL MODULE */
+  h2{font-size:25px;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:30px; margin-top:26px;}
+
+  /* TOOL 1: autonomy graduation */
+  .predict-row{display:flex; gap:8px; flex-wrap:wrap; margin-top:18px;}
+  .pbtn{background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:9px 16px; border-radius:20px; font-size:13px;}
+  .pbtn.active{border-color:var(--signal); color:var(--signal);}
+  .track{margin-top:24px; display:flex; flex-direction:column; gap:2px;}
+  .tier{border:1px solid var(--line); padding:16px 18px; border-radius:4px; opacity:0.4; transition:opacity 0.4s, border-color 0.4s;}
+  .tier.lit{opacity:1; border-color:var(--calm);}
+  .tier .tname{font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted);}
+  .tier .tdesc{font-size:14px; margin-top:4px;}
+  .gap-note{display:none; margin-top:18px; padding:14px 16px; background:rgba(232,199,122,0.07); border-left:3px solid var(--signal); border-radius:0 4px 4px 0; font-size:14px;}
+  .gap-note.show{display:block;}
+  select{background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:10px 14px; font-family:'Inter',sans-serif; font-size:15px; border-radius:4px; width:100%; max-width:340px; margin-top:16px;}
+
+  /* TOOL 2: silence audit */
+  .scan-grid{display:grid; gap:1px; margin-top:20px; background:var(--line); border:1px solid var(--line); border-radius:4px; overflow:hidden;}
+  .scan-item{background:var(--panel); padding:16px 18px; cursor:pointer;}
+  .scan-q{font-size:14px; display:flex; justify-content:space-between; align-items:center; gap:12px;}
+  .scan-q::after{content:'reveal'; font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--muted2); text-transform:uppercase; flex-shrink:0;}
+  .scan-item.opened .scan-q::after{content:'—';}
+  .scan-a{max-height:0; overflow:hidden; transition:max-height 0.35s ease; font-size:13.5px; color:var(--muted);}
+  .scan-item.opened .scan-a{max-height:220px; margin-top:10px;}
+  .scan-a b{color:var(--signal);}
+
+  /* TOOL 3: matrix */
+  .slider-row label{font-size:12.5px; color:var(--muted); font-family:'IBM Plex Mono',monospace; text-transform:uppercase; letter-spacing:0.03em;}
+  input[type=range]{width:100%; accent-color:var(--calm); margin-top:8px;}
+  .matrix-controls{display:grid; gap:20px; margin-top:24px;}
+  .quadrant{position:relative; width:100%; aspect-ratio:1.7; background:var(--panel2); border:1px solid var(--line); margin-top:20px; border-radius:6px;}
+  .qline{position:absolute; background:var(--line);}
+  .qline.h{width:100%; height:1px; top:50%;} .qline.v{height:100%; width:1px; left:50%;}
+  .qlabel{position:absolute; font-family:'IBM Plex Mono',monospace; font-size:9.5px; color:var(--muted2); text-transform:uppercase; letter-spacing:0.03em; max-width:120px;}
+  .qdot{position:absolute; width:13px; height:13px; border-radius:50%; background:var(--calm); box-shadow:0 0 10px var(--calm); transform:translate(-50%,-50%); transition:left 0.3s, top 0.3s;}
+  .matrix-verdict{margin-top:16px; font-size:14px; color:var(--muted);}
+  .matrix-verdict b{color:var(--text);}
+
+  /* TOOL 4: branch */
+  .branch-btns{display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;}
+  .bbtn{flex:1; min-width:200px; background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:16px; border-radius:6px; text-align:left; font-size:13.5px;}
+  .bbtn b{display:block; font-family:'Newsreader',serif; font-size:16px; margin-bottom:5px;}
+  .bbtn.chosen{border-color:var(--signal);}
+  .cascade{margin-top:22px; display:none;}
+  .cascade.show{display:block;}
+  .cascade-step{padding:10px 16px 20px 16px; border-left:2px solid var(--line); margin-left:5px; position:relative; font-size:13.5px; color:var(--muted);}
+  .cascade-step::before{content:''; position:absolute; left:-6px; top:12px; width:10px; height:10px; border-radius:50%; background:var(--bg); border:2px solid var(--signal);}
+  .cascade-step b{color:var(--text);}
+  .reopen{margin-top:8px; font-size:13px; color:var(--calm); cursor:pointer; text-decoration:underline;}
+
+  /* TOOL 5: counterfactual */
+  .cf-guess{display:flex; gap:8px; margin-top:18px;}
+  .cf-panels{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:22px;}
+  @media (max-width:640px){ .cf-panels{grid-template-columns:1fr;} }
+  .cf-panel{background:var(--panel2); border:1px solid var(--line); border-radius:6px; padding:18px; opacity:0.4; transition:opacity 0.4s, border-color 0.4s;}
+  .cf-panel.reveal{opacity:1;}
+  .cf-panel.win{border-color:var(--calm);}
+  .cf-panel h3{font-family:'IBM Plex Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.05em; color:var(--muted); margin-bottom:10px;}
+  .cf-panel p{font-size:13.5px; color:var(--muted); margin-top:8px;}
+
+  /* TOOL 6: diagnostic */
+  .toggles{display:grid; gap:10px; margin-top:20px;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--panel2); border-radius:4px; border:1px solid var(--line); cursor:pointer; user-select:none; font-size:14px;}
+  .toggle-row.on{border-color:var(--calm);}
+  .switch{width:36px; height:20px; border-radius:10px; background:var(--muted2); position:relative; transition:background 0.2s; flex-shrink:0; margin-left:14px;}
+  .switch::after{content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--text); transition:transform 0.2s;}
+  .toggle-row.on .switch{background:var(--calm);}
+  .toggle-row.on .switch::after{transform:translateX(16px);}
+  .verdict{margin-top:22px; padding:20px; border-radius:6px; background:var(--panel2); border:1px solid var(--line);}
+  .verdict-tier{font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--signal); text-transform:uppercase; letter-spacing:0.05em;}
+  .verdict-text{font-size:14px; color:var(--muted); margin-top:8px;}
+  .verdict-text b{color:var(--text);}
+
+  /* CLOSE */
+  .close{text-align:center; padding:100px 0 80px;}
+  .models{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:34px; text-align:left;}
+  .model-card{background:var(--panel); border:1px solid var(--line); padding:20px; border-radius:6px;}
+  .model-card .mono{color:var(--signal); font-size:11px; text-transform:uppercase; letter-spacing:0.06em;}
+  .model-card h3{font-family:'Newsreader',serif; font-size:19px; margin-top:6px;}
+  .model-card p{margin-top:8px; font-size:13.5px; color:var(--muted);}
+  footer{text-align:center; padding:40px 0; color:var(--muted2); font-size:11.5px; font-family:'IBM Plex Mono',monospace;}
+
+  :focus-visible{outline:2px solid var(--signal); outline-offset:2px;}
+  .back-btn{position:fixed; top:18px; left:18px; z-index:50; display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line); color:var(--muted); font-family:'IBM Plex Mono',monospace; font-size:12px; text-decoration:none; padding:8px 14px; border-radius:20px; transition:border-color 0.2s, color 0.2s;}
+  .back-btn:hover{border-color:var(--signal); color:var(--signal);}
+</style>
+</head>
+<body>
+
+<a class="back-btn" href="../index.html">&larr; catalog</a>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow" style="justify-content:center;"><span class="dot"></span>ambient agents · calibrated to 2026 field data</div>
+    <h1>The best agent you'll use this year<br><em>won't ask for your attention.</em></h1>
+    <p class="lede" style="margin-left:auto; margin-right:auto;">Everyone assumes the hard problem is making agents smarter. The people actually shipping them have quietly concluded the hard problem is something else: teaching an agent when to shut up — and proving it's earned the right to.</p>
+    <div class="hush-dot" id="hushDot"><div class="core"></div></div>
+    <div class="hush-caption" id="hushCaption">this dot hasn't said a word since you arrived — hover it</div>
+  </div>
+</section>
+
+<!-- TOOL 1 -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>01 · simulator</div>
+    <h2>How long before you'd let it go quiet?</h2>
+    <p class="lede">Before you see how the industry actually stages this, guess: how long would an agent need to be right before you'd let it act without asking first?</p>
+    <div class="predict-row" id="predictRow">
+      <button class="pbtn" data-g="1 day">1 day</button>
+      <button class="pbtn" data-g="1 week">1 week</button>
+      <button class="pbtn" data-g="1 month">1 month</button>
+      <button class="pbtn" data-g="never">never, honestly</button>
+    </div>
+    <div class="gap-note" id="tierGap"></div>
+    <p class="lede" style="margin-top:26px;">This is <b style="color:var(--text)">Earned Silence</b>: the idea that quiet isn't a default setting, it's a privilege an agent graduates into. Now pick a task and watch it move through the actual staged framework agentic-security teams use in 2026.</p>
+    <select id="taskSelect">
+      <option value="">— choose an action type —</option>
+      <option value="0">Drafting a reply for you to review</option>
+      <option value="1">Rescheduling a meeting on your calendar</option>
+      <option value="2">Sending an email on your behalf</option>
+      <option value="3">Moving money to fix a billing error</option>
+    </select>
+    <div class="track">
+      <div class="tier" id="tier1"><div class="tname">Tier 1 — approval-gated</div><div class="tdesc">Every action needs a yes. Minimum 4 weeks with &gt;95% of its suggestions accepted before it's even eligible to move up.</div></div>
+      <div class="tier" id="tier2"><div class="tname">Tier 2 — notify-after</div><div class="tdesc">Acts inside defined guardrails, tells you afterward. Needs 8 straight weeks with zero critical incidents.</div></div>
+      <div class="tier" id="tier3"><div class="tname">Tier 3 — earned silence</div><div class="tdesc">Acts and stays quiet unless something crosses a real threshold. This is what "ambient" actually means once it's earned, not assumed.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL 2 -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>02 · blind-spot scanner</div>
+    <h2>The silence audit</h2>
+    <p class="lede">Five things people assume about quiet agents. Click each — most teams find they've been trusting the wrong one.</p>
+    <div class="scan-grid" id="scanGrid"></div>
+  </div>
+</section>
+
+<!-- TOOL 3 -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>03 · decision matrix</div>
+    <h2>Ping you, or stay quiet?</h2>
+    <p class="lede">Guess first: think of the last thing an app did for you automatically. Was it easy to undo, and would you have noticed if it was wrong? Now place any task on these two axes and see where the line actually falls.</p>
+    <div class="matrix-controls">
+      <div class="slider-row"><label>Reversibility — easy to undo ←→ permanent</label><input type="range" id="slRev" min="0" max="100" value="50"></div>
+      <div class="slider-row"><label>Verifiability — you'd notice instantly ←→ invisible if wrong</label><input type="range" id="slVer" min="0" max="100" value="50"></div>
+    </div>
+    <div class="quadrant" id="quadrant">
+      <div class="qline h"></div><div class="qline v"></div>
+      <div class="qlabel" style="top:6px; left:8px;">safe to auto-silence</div>
+      <div class="qlabel" style="top:6px; right:8px; text-align:right;">notify after, always</div>
+      <div class="qlabel" style="bottom:6px; left:8px;">quiet is fine, low stakes</div>
+      <div class="qlabel" style="bottom:6px; right:8px; text-align:right;">approval-gate this one</div>
+      <div class="qdot" id="qdot"></div>
+    </div>
+    <div class="matrix-verdict" id="matrixVerdict"></div>
+  </div>
+</section>
+
+<!-- TOOL 4 -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>04 · scenario brancher</div>
+    <h2>It finds a $340 billing error. Now what?</h2>
+    <p class="lede">Before you pick — which do you think actually builds more long-term trust: fixing it silently, or telling you right away?</p>
+    <div class="branch-btns">
+      <button class="bbtn" data-path="silent"><b>Fix it silently</b>No interruption. You find out later, if ever.</button>
+      <button class="bbtn" data-path="notify"><b>Notify immediately</b>You get a ping the moment it's found.</button>
+      <button class="bbtn" data-path="digest"><b>Hold for the weekly digest</b>Bundled with everything else it did that week.</button>
+    </div>
+    <div class="cascade" id="cascadeSilent">
+      <div class="cascade-step"><b>The upside —</b> zero cognitive load. This is the exact leverage the "quiet loop" pattern is built for: cross-function agents that see email, calendar and records at once already cut measured busywork by roughly half.</div>
+      <div class="cascade-step"><b>The risk —</b> this is where <b>The 200 OK Lie</b> lives. If the agent's read of "error" was itself wrong, a silent fix means the mistake compounds with nothing to catch it. Silence hides the good outcome and the bad one identically.</div>
+      <div class="cascade-step"><b>Six months later —</b> if it was right every time, you've built maximal trust and never noticed the work. If it was wrong once, you find out from a bank statement, not from the agent — and that single event undoes a lot of accumulated trust at once.</div>
+      <div class="reopen" onclick="resetBranch()">↺ try another path</div>
+    </div>
+    <div class="cascade" id="cascadeNotify">
+      <div class="cascade-step"><b>The upside —</b> you're never surprised. Full legibility on every action.</div>
+      <div class="cascade-step"><b>The risk —</b> this is exactly how <b>The Boy-Who-Cried-Wolf Tax</b> gets levied. Every notification — even correct ones — has a carrying cost. Do this for every minor finding and by the tenth ping, you're skimming, not reading, and you'll skim right past the one that mattered.</div>
+      <div class="cascade-step"><b>Six months later —</b> you've paid a steady, visible attention tax the entire time in exchange for a paper trail you rarely check.</div>
+      <div class="reopen" onclick="resetBranch()">↺ try another path</div>
+    </div>
+    <div class="cascade" id="cascadeDigest">
+      <div class="cascade-step"><b>The upside —</b> this is close to what actually won in the field. Calm-technology research is explicit: the trust move isn't "never interrupt," it's "batch the low-stakes and surface the real ones" — a single digest instead of twenty pings.</div>
+      <div class="cascade-step"><b>The risk —</b> a genuinely time-sensitive error (the account overdrafts in three days) sitting in a weekly digest is the wrong tier entirely — this path only works if the agent can tell "worth bundling" from "worth breaking silence for."</div>
+      <div class="cascade-step"><b>Six months later —</b> this is what <b>Earned Silence</b> actually looks like in practice — not permanently mute, not constantly narrating, but a threshold that moves based on stakes, recalibrated continuously.</div>
+      <div class="reopen" onclick="resetBranch()">↺ try another path</div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL 5 -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>05 · counterfactual</div>
+    <h2>The loud timeline that almost happened</h2>
+    <p class="lede">Early AI assistants mostly shipped chat-first, ask-first. Guess: if agents had stayed loud-by-default instead of going quiet-by-default, would adoption of ambient agents be higher or lower right now?</p>
+    <div class="cf-guess">
+      <button class="hbtn pbtn" data-cf="higher">Higher — people like visibility</button>
+      <button class="hbtn pbtn" data-cf="lower">Lower — the noise would've killed trust</button>
+    </div>
+    <div class="cf-panels">
+      <div class="cf-panel" id="cfLoud"><h3>the loud timeline</h3><p>Constant low-value alerts trigger the same desensitization documented in on-call engineering: acknowledge time rises, real signals get lost in noise, and — this is <b style="color:var(--text)">The Boy-Who-Cried-Wolf Tax</b> again — trust erodes with every unnecessary ping, not just the wrong ones.</p></div>
+      <div class="cf-panel win" id="cfQuiet"><h3>the actual timeline</h3><p>The tools that won framed invisibility as the pitch itself — "no new client to learn, no workflow changes." Field reports now say users report the highest comfort specifically with agents that run silently and surface only when there's real value.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL 6 -->
+<section>
+  <div class="wrap">
+    <div class="eyebrow"><span class="dot"></span>06 · diagnostic</div>
+    <h2>Your earned-silence threshold</h2>
+    <p class="lede">Guess your tier first, then answer honestly and see if you were right.</p>
+    <div class="predict-row">
+      <button class="pbtn" data-t="1">Tier 1 — I want to approve everything</button>
+      <button class="pbtn" data-t="2">Tier 2 — tell me after, in real time</button>
+      <button class="pbtn" data-t="3">Tier 3 — I'm ready for earned silence</button>
+    </div>
+    <div class="toggles" id="toggleList"></div>
+    <div class="verdict">
+      <div class="verdict-tier" id="verdictTier">— toggle the factors above —</div>
+      <div class="verdict-text" id="verdictText">Your actual tier will appear here, next to your guess above.</div>
+    </div>
+  </div>
+</section>
+
+<section class="close">
+  <div class="wrap">
+    <div class="eyebrow" style="justify-content:center;"><span class="dot"></span>carry these out with you</div>
+    <h2 style="font-size:28px;">Three names for one instinct</h2>
+    <div class="models">
+      <div class="model-card"><div class="mono">Model 1</div><h3>Earned Silence</h3><p>Quiet is a privilege an agent graduates into with a track record — not a default you code in on day one.</p></div>
+      <div class="model-card"><div class="mono">Model 2</div><h3>The 200 OK Lie</h3><p>A chain where every individual step reports success while the overall action is wrong. Silence hides this failure identically to how it hides a correct one.</p></div>
+      <div class="model-card"><div class="mono">Model 3</div><h3>The Boy-Who-Cried-Wolf Tax</h3><p>Every unnecessary interruption doesn't just cost that moment — it discounts the credibility of every alert that comes after it.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>compiled from LangChain, CSA, IBM, Rootly &amp; field UX research, mid-2026 · figures cited inline where used</footer>
+
+<script>
+// hero breathing dot
+const hushDot = document.getElementById('hushDot');
+const hushCaption = document.getElementById('hushCaption');
+let hushTimer;
+hushDot.addEventListener('mouseenter', ()=>{
+  hushCaption.textContent = "everything's fine. nothing to report.";
+  clearTimeout(hushTimer);
+});
+hushDot.addEventListener('mouseleave', ()=>{
+  hushTimer = setTimeout(()=>{ hushCaption.textContent = "this dot hasn't said a word since you arrived — hover it"; }, 1200);
+});
+
+// TOOL 1
+document.querySelectorAll('#predictRow .pbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('#predictRow .pbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    const gap = document.getElementById('tierGap');
+    const guess = b.dataset.g;
+    let real;
+    if(guess==='1 day') real = "The staged framework used in production requires 4 weeks minimum at &gt;95% acceptance before Tier 1 graduates at all — a full month faster than \"never,\" but far slower than a day.";
+    else if(guess==='1 week') real = "Close in spirit, off by roughly 3x — the real minimum for the first graduation is 4 weeks, not 1.";
+    else if(guess==='1 month') real = "That's almost exactly the real threshold — 4 weeks at &gt;95% acceptance for the first tier alone, then another 8 weeks with zero critical incidents for the next.";
+    else real = "Reasonable instinct, but the framework already exists and is already staged, with hard numeric thresholds rather than an indefinite \"no.\"";
+    gap.innerHTML = real;
+    gap.classList.add('show');
+  });
+});
+const taskTier = {"0":1, "1":2, "2":2, "3":1};
+document.getElementById('taskSelect').addEventListener('change', e=>{
+  document.querySelectorAll('.tier').forEach(t=>t.classList.remove('lit'));
+  if(!e.target.value) return;
+  document.getElementById('tier'+taskTier[e.target.value]).classList.add('lit');
+});
+
+// TOOL 2
+const scans = [
+  {q:"\"If nothing pings me, nothing went wrong.\"", a:"This is <b>The 200 OK Lie</b>: a documented failure pattern where an agent invents a bad input in step one, then every downstream call technically succeeds while the whole workflow is wrong. Silence and correctness look identical from the outside."},
+  {q:"\"I'd notice if it acted incorrectly.\"", a:"Ambient agents are built to run continuously, often \"thousands at once\" with relaxed latency — which means a wrong action can compound quietly for a long stretch before anything routes it to a human."},
+  {q:"\"Fewer alerts always means a better agent.\"", a:"Not quite — the goal isn't zero notifications, it's maximizing the correlation between a notification firing and something actually being at stake. Zero alerts on a genuinely wrong action is the failure state, not the ideal one."},
+  {q:"\"It'll ask permission before anything risky.\"", a:"Only up to the tier it's earned. Once an agent graduates to \"notify-after,\" it's already executing inside its guardrails and telling you afterward — permission-first isn't guaranteed forever."},
+  {q:"\"Undo is always available if it gets something wrong.\"", a:"Trust research on this is specific: quiet only stays trustworthy if the system can show what changed, why, and how to reverse it. That's a deliberate design commitment, not something silence gives you automatically."}
+];
+const scanGrid = document.getElementById('scanGrid');
+scans.forEach(s=>{
+  const el = document.createElement('div');
+  el.className='scan-item';
+  el.innerHTML = `<div class="scan-q">${s.q}</div><div class="scan-a">${s.a}</div>`;
+  el.addEventListener('click', ()=> el.classList.toggle('opened'));
+  scanGrid.appendChild(el);
+});
+
+// TOOL 3
+const qdot = document.getElementById('qdot');
+const matrixVerdict = document.getElementById('matrixVerdict');
+function updateMatrix(){
+  const rev = document.getElementById('slRev').value;
+  const ver = document.getElementById('slVer').value;
+  qdot.style.left = rev+'%';
+  qdot.style.top = (100-ver)+'%';
+  let v;
+  if(rev<55 && ver<55) v = "<b>Safe for earned silence.</b> Easy to undo, easy to spot if wrong — the lowest-risk quadrant for going quiet.";
+  else if(rev>=55 && ver<55) v = "<b>Approval-gate this one.</b> Hard to undo but easy to catch — worth a human glance before it happens, not after.";
+  else if(rev<55 && ver>=55) v = "<b>Fine to bundle into a digest.</b> Reversible even if you don't catch it right away, so low urgency either way.";
+  else v = "<b>Notify after, every time.</b> Hard to undo, hard to verify — this is exactly the profile behind <b>The 200 OK Lie</b>, so it needs a visible trail no matter how trustworthy the agent has been.";
+  matrixVerdict.innerHTML = v;
+}
+document.getElementById('slRev').addEventListener('input', updateMatrix);
+document.getElementById('slVer').addEventListener('input', updateMatrix);
+updateMatrix();
+
+// TOOL 4
+document.querySelectorAll('.bbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.bbtn').forEach(b=>b.classList.remove('chosen'));
+    btn.classList.add('chosen');
+    ['Silent','Notify','Digest'].forEach(id=>document.getElementById('cascade'+id).classList.remove('show'));
+    const map={silent:'Silent', notify:'Notify', digest:'Digest'};
+    document.getElementById('cascade'+map[btn.dataset.path]).classList.add('show');
+  });
+});
+function resetBranch(){
+  document.querySelectorAll('.bbtn').forEach(b=>b.classList.remove('chosen'));
+  ['Silent','Notify','Digest'].forEach(id=>document.getElementById('cascade'+id).classList.remove('show'));
+}
+
+// TOOL 5
+document.querySelectorAll('.cf-guess .pbtn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.cf-guess .pbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    document.getElementById('cfLoud').classList.add('reveal');
+    document.getElementById('cfQuiet').classList.add('reveal');
+  });
+});
+
+// TOOL 6
+const factors = [
+  {id:'d1', label:'I already check email/notifications compulsively', dir:-1},
+  {id:'d2', label:"I've been burned by an automated system getting something wrong before", dir:-1},
+  {id:'d3', label:'The actions I\'d hand off mostly involve money or irreversible changes', dir:-1},
+  {id:'d4', label:'I have a high tolerance for occasionally being surprised', dir:1},
+  {id:'d5', label:'I\'d rather review a weekly digest than get real-time pings', dir:1}
+];
+let guessedTier = null;
+document.querySelectorAll('[data-t]').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('[data-t]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    guessedTier = b.dataset.t;
+    updateVerdict();
+  });
+});
+const toggleList = document.getElementById('toggleList');
+factors.forEach(f=>{
+  const row = document.createElement('div');
+  row.className='toggle-row'; row.id=f.id;
+  row.innerHTML = `<span>${f.label}</span><div class="switch"></div>`;
+  row.addEventListener('click', ()=>{ row.classList.toggle('on'); updateVerdict(); });
+  toggleList.appendChild(row);
+});
+function updateVerdict(){
+  let score=0;
+  factors.forEach(f=>{ if(document.getElementById(f.id).classList.contains('on')) score += f.dir; });
+  let tier, label;
+  if(score<=-2){ tier='1'; label='Tier 1 — approval-gated'; }
+  else if(score>=2){ tier='3'; label='Tier 3 — earned silence, ready now'; }
+  else { tier='2'; label='Tier 2 — notify-after'; }
+  document.getElementById('verdictTier').textContent = label;
+  let compare = guessedTier ? (guessedTier===tier ? " You guessed right." : ` You guessed Tier ${guessedTier} — off by ${Math.abs(guessedTier-tier)} tier${Math.abs(guessedTier-tier)>1?'s':''}.`) : "";
+  document.getElementById('verdictText').innerHTML = `Based on your answers, not your guess.${compare} This maps to the same staged model as Tool 01 — <b>Earned Silence</b> isn't just for the agent, it's your side of the trust budget too.`;
+}
+</script>
+</body>
+</html>
