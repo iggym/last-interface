@@ -1,6 +1,14 @@
 [
   {
     "id": "01-permission-guardrails",
+    "title": "Everyone's building agents.Most never leave the hangar.",
+    "summary": "Six live instruments for reading where AI agents actually stand right now — not the pitch deck version. Every dial below is calibrated to a real 2026 dataset.",
+    "tags": ["Security", "Governance", "Interactive"],
+    "date": "2026-07-21",
+    "file": "articles/building-guardrails.html"
+  },
+  {
+    "id": "01-permission-guardrails",
     "title": "Autonomous Permission Guardrails",
     "summary": "How human-in-the-loop OAuth scopes and Governance-as-Code prevent rogue agentic API loops while maintaining execution speed.",
     "tags": ["Security", "Governance", "Interactive"],
