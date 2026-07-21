@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Agent Reality Gauge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,500&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0F1614; --panel:#16211D; --panel2:#1C2A24; --line:#2A3B33;
+    --amber:#E0A83C; --mint:#6FBF9A; --rust:#D65F4C;
+    --text:#EDEAE1; --muted:#8B9A93; --muted2:#5F726A;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; line-height:1.55; -webkit-font-smoothing:antialiased;}
+  @media (prefers-reduced-motion: reduce){ *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;} }
+  h1,h2,h3{font-family:'Source Serif 4',serif; font-weight:600; letter-spacing:-0.01em;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 24px;}
+  section{padding:90px 0; border-bottom:1px solid var(--line);}
+  .eyebrow{font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:0.12em; text-transform:uppercase; color:var(--amber); margin-bottom:14px;}
+  p.lede{color:var(--muted); font-size:17px; max-width:640px;}
+  a{color:var(--mint);}
+  button{font-family:'Inter',sans-serif; cursor:pointer;}
+
+  /* HERO */
+  .hero{padding:100px 0 80px; text-align:center;}
+  .hero h1{font-size:clamp(32px,5vw,52px); line-height:1.1; margin-bottom:18px;}
+  .hero h1 em{font-style:italic; color:var(--amber);}
+  .hero p.lede{margin:0 auto 50px;}
+  .gauge-wrap{display:flex; justify-content:center; margin-bottom:20px;}
+  svg text{font-family:'JetBrains Mono',monospace;}
+  .gauge-caption{font-family:'JetBrains Mono',monospace; font-size:13px; color:var(--muted); max-width:520px; margin:14px auto 0;}
+  .gauge-caption b{color:var(--text);}
+
+  /* PANEL MODULE */
+  .module-head{display:flex; align-items:baseline; gap:14px; margin-bottom:8px;}
+  .module-num{font-family:'JetBrains Mono',monospace; color:var(--muted2); font-size:13px;}
+  h2{font-size:26px;}
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:4px; padding:32px; margin-top:28px;}
+  .light{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:8px;}
+  .light.amber{background:var(--amber); box-shadow:0 0 8px var(--amber);}
+  .light.mint{background:var(--mint); box-shadow:0 0 8px var(--mint);}
+  .light.rust{background:var(--rust); box-shadow:0 0 8px var(--rust);}
+
+  /* TOOL 1: autonomy ladder */
+  select{background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:10px 14px; font-family:'Inter',sans-serif; font-size:15px; border-radius:3px; width:100%; max-width:360px;}
+  .ladder{display:flex; flex-direction:column; gap:2px; margin-top:24px;}
+  .rung{border:1px solid var(--line); padding:14px 16px; border-radius:3px; opacity:0.35; transition:opacity 0.4s, border-color 0.4s;}
+  .rung.active{opacity:1; border-color:var(--amber);}
+  .rung .rlabel{font-family:'JetBrains Mono',monospace; font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;}
+  .rung .rdesc{font-size:14px; margin-top:4px;}
+  .contradiction{display:none; margin-top:18px; padding:14px 16px; background:rgba(214,95,76,0.1); border-left:3px solid var(--rust); border-radius:0 3px 3px 0; font-size:14px;}
+  .contradiction.show{display:block;}
+
+  /* TOOL 2: pilot purgatory calculator */
+  .toggles{display:grid; gap:10px; margin-top:20px;}
+  .toggle-row{display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:var(--panel2); border-radius:3px; border:1px solid var(--line); cursor:pointer; user-select:none;}
+  .toggle-row.on{border-color:var(--mint);}
+  .switch{width:38px; height:20px; border-radius:10px; background:var(--muted2); position:relative; transition:background 0.2s; flex-shrink:0;}
+  .switch::after{content:''; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:var(--text); transition:transform 0.2s;}
+  .toggle-row.on .switch{background:var(--mint);}
+  .toggle-row.on .switch::after{transform:translateX(18px);}
+  .verdict{margin-top:24px; padding:20px; border-radius:3px; background:var(--panel2); border:1px solid var(--line); display:flex; gap:20px; align-items:center;}
+  .verdict-num{font-family:'JetBrains Mono',monospace; font-size:36px; color:var(--amber); min-width:90px;}
+  .verdict-text{font-size:14px; color:var(--muted);}
+  .verdict-text b{color:var(--text);}
+
+  /* TOOL 3: blind spot scanner */
+  .scan-grid{display:grid; gap:1px; margin-top:20px; background:var(--line); border:1px solid var(--line);}
+  .scan-item{background:var(--panel); padding:16px; cursor:pointer;}
+  .scan-q{font-size:14px; display:flex; justify-content:space-between; align-items:center;}
+  .scan-q::after{content:'reveal'; font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted2); text-transform:uppercase;}
+  .scan-item.opened .scan-q::after{content:'—'; }
+  .scan-a{max-height:0; overflow:hidden; transition:max-height 0.3s ease; font-size:13.5px; color:var(--muted);}
+  .scan-item.opened .scan-a{max-height:200px; margin-top:10px;}
+
+  /* TOOL 4: hype cycle positioner */
+  .hype-track{position:relative; height:160px; margin-top:30px;}
+  .hype-curve{width:100%; height:100%;}
+  .guess-marker,.real-marker{position:absolute; top:0; transform:translateX(-50%); display:flex; flex-direction:column; align-items:center; font-family:'JetBrains Mono',monospace; font-size:11px; transition:left 0.6s cubic-bezier(.2,.8,.3,1);}
+  .marker-dot{width:10px; height:10px; border-radius:50%; margin-top:6px;}
+  .guess-marker .marker-dot{background:var(--muted);}
+  .real-marker{display:none;}
+  .real-marker .marker-dot{background:var(--rust); box-shadow:0 0 8px var(--rust);}
+  .real-marker.show{display:flex;}
+  .hype-buttons{display:flex; gap:8px; flex-wrap:wrap; margin-top:16px;}
+  .hbtn{background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:8px 14px; border-radius:20px; font-size:13px;}
+  .hbtn.active{border-color:var(--amber); color:var(--amber);}
+  .hype-reveal{display:none; margin-top:18px; padding:14px 16px; background:rgba(224,168,60,0.08); border-left:3px solid var(--amber); border-radius:0 3px 3px 0; font-size:14px;}
+  .hype-reveal.show{display:block;}
+
+  /* TOOL 5: build vs buy matrix */
+  .matrix-controls{display:grid; grid-template-columns:1fr; gap:20px; margin-top:24px;}
+  .slider-row label{font-size:13px; color:var(--muted); font-family:'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:0.04em;}
+  input[type=range]{width:100%; accent-color:var(--amber); margin-top:8px;}
+  .quadrant{position:relative; width:100%; aspect-ratio:1.6; background:var(--panel2); border:1px solid var(--line); margin-top:20px; border-radius:4px;}
+  .qline{position:absolute; background:var(--line);}
+  .qline.h{width:100%; height:1px; top:50%;}
+  .qline.v{height:100%; width:1px; left:50%;}
+  .qlabel{position:absolute; font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--muted2); text-transform:uppercase;}
+  .qdot{position:absolute; width:14px; height:14px; border-radius:50%; background:var(--mint); box-shadow:0 0 10px var(--mint); transform:translate(-50%,-50%); transition:left 0.3s, top 0.3s;}
+  .matrix-verdict{margin-top:16px; font-size:14px; color:var(--muted);}
+  .matrix-verdict b{color:var(--text);}
+
+  /* TOOL 6: orchestration branch */
+  .branch-btns{display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;}
+  .bbtn{flex:1; min-width:220px; background:var(--panel2); border:1px solid var(--line); color:var(--text); padding:18px; border-radius:4px; text-align:left; font-size:14px;}
+  .bbtn b{display:block; font-family:'Source Serif 4',serif; font-size:17px; margin-bottom:6px;}
+  .bbtn.chosen{border-color:var(--amber);}
+  .cascade{margin-top:22px; display:none;}
+  .cascade.show{display:block;}
+  .cascade-step{padding:12px 16px; border-left:2px solid var(--line); margin-left:5px; padding-bottom:20px; position:relative; font-size:14px; color:var(--muted);}
+  .cascade-step::before{content:''; position:absolute; left:-6px; top:14px; width:10px; height:10px; border-radius:50%; background:var(--bg); border:2px solid var(--amber);}
+  .cascade-step b{color:var(--text);}
+  .reopen{margin-top:10px; font-size:13px; color:var(--mint); cursor:pointer; text-decoration:underline;}
+
+  /* CLOSE */
+  .close{text-align:center; padding:100px 0 80px;}
+  .models{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:18px; margin-top:36px; text-align:left;}
+  .model-card{background:var(--panel); border:1px solid var(--line); padding:20px; border-radius:4px;}
+  .model-card .mono{color:var(--amber); font-size:11px; text-transform:uppercase; letter-spacing:0.08em;}
+  .model-card p{margin-top:8px; font-size:14px; color:var(--muted);}
+  footer{text-align:center; padding:40px 0; color:var(--muted2); font-size:12px; font-family:'JetBrains Mono',monospace;}
+
+  :focus-visible{outline:2px solid var(--amber); outline-offset:2px;}
+
+  .back-btn{position:fixed; top:18px; left:18px; z-index:50; display:inline-flex; align-items:center; gap:6px; background:var(--panel); border:1px solid var(--line); color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:12px; text-decoration:none; padding:8px 14px; border-radius:20px; transition:border-color 0.2s, color 0.2s;}
+  .back-btn:hover{border-color:var(--amber); color:var(--amber);}
+</style>
+</head>
+<body>
+
+<a class="back-btn" href="../index.html">&larr; catalog</a>
+
+<section class="hero">
+  <div class="wrap">
+    <div class="eyebrow">field instrument · updated for 2026</div>
+    <h1>Everyone's building agents.<br><em>Most never leave the hangar.</em></h1>
+    <p class="lede">Six live instruments for reading where AI agents actually stand right now — not the pitch deck version. Every dial below is calibrated to a real 2026 dataset.</p>
+    <div class="gauge-wrap">
+      <svg id="heroGauge" viewBox="0 0 300 170" width="320">
+        <path d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="#2A3B33" stroke-width="16"/>
+        <path id="heroArc" d="M 30 150 A 120 120 0 0 1 270 150" fill="none" stroke="#D65F4C" stroke-width="16" stroke-dasharray="377" stroke-dashoffset="377"/>
+        <text x="150" y="118" text-anchor="middle" font-size="40" fill="#EDEAE1" font-weight="700">89%</text>
+        <text x="150" y="142" text-anchor="middle" font-size="11" fill="#8B9A93">never reach production</text>
+      </svg>
+    </div>
+    <p class="gauge-caption">Gartner surveyed 782 infrastructure &amp; ops leaders in April 2026: <b>89% of enterprise agent pilots never make it to production.</b> The 11% that do report <b>171% average ROI.</b> There is almost no middle outcome — this is the gauge that should worry you more than any capability benchmark.</p>
+  </div>
+</section>
+
+<!-- TOOL 1 -->
+<section>
+  <div class="wrap">
+    <div class="module-head"><span class="module-num">01 / SIMULATOR</span></div>
+    <h2>The autonomy ladder — where your task actually sits</h2>
+    <p class="lede">Agent autonomy isn't binary. Researchers describe three real stages, the same way self-driving cars get leveled. Pick a task you're considering handing to an agent and see where it actually lands.</p>
+    <select id="taskSelect">
+      <option value="">— choose a task —</option>
+      <option value="0">Send a templated follow-up email after a form submission</option>
+      <option value="1">Triage support tickets and route to the right queue</option>
+      <option value="2">Investigate a production bug, write a fix, and open a PR</option>
+      <option value="3">Negotiate vendor pricing and finalize a contract</option>
+    </select>
+    <div class="ladder">
+      <div class="rung" id="rung1"><div class="rlabel">Level 1 — Chain</div><div class="rdesc">Rule-based automation, fixed sequence. No real decisions made.</div></div>
+      <div class="rung" id="rung2"><div class="rlabel">Level 2 — Workflow</div><div class="rdesc">Sequence is decided dynamically by an LLM, but actions are predefined.</div></div>
+      <div class="rung" id="rung3"><div class="rlabel">Level 3 — Partially autonomous</div><div class="rdesc">Plans, executes, and adapts with minimal human oversight.</div></div>
+    </div>
+    <div class="contradiction" id="ladderContradiction"></div>
+  </div>
+</section>
+
+<!-- TOOL 2 -->
+<section>
+  <div class="wrap">
+    <div class="module-head"><span class="module-num">02 / DIAGNOSTIC</span></div>
+    <h2>Pilot Purgatory odds</h2>
+    <p class="lede">The gap between the 89% and the 11% isn't luck — Gartner and MIT's field data both point to the same five decisions. Toggle what's true for your plan.</p>
+    <div class="toggles" id="toggleList"></div>
+    <div class="verdict">
+      <div class="verdict-num" id="verdictScore">—</div>
+      <div class="verdict-text" id="verdictText">Toggle the factors above to see your odds of reaching production.</div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOL 3 -->
+<section>
+  <div class="wrap">
+    <div class="module-head"><span class="module-num">03 / BLIND SPOT SCANNER</span></div>
+    <h2>What your governance plan is probably missing</h2>
+    <p class="lede">Only 22% of organizations treat AI agents as identity-bearing entities with formal access controls. Click each one — most teams assume they've covered it and haven't.</p>
+    <div class="scan-grid" id="scanGrid"></div>
+  </div>
+</section>
+
+<!-- TOOL 4 -->
+<section>
+  <div class="wrap">
+    <div class="module-head"><span class="module-num">04 / CONTRADICTION</span></div>
+    <h2>Guess the hype cycle position</h2>
+    <p class="lede">Gartner plots every technology on a hype curve. Where do you think "AI agents" sits right now, in mid-2026?</p>
+    <div class="hype-track">
+      <svg class="hype-curve" viewBox="0 0 600 160" preserveAspectRatio="none">
+        <path d="M 0 140 C 100 140, 130 10, 220 10 C 280 10, 300 90, 340 110 C 420 140, 500 130, 600 90" fill="none" stroke="#2A3B33" stroke-width="2"/>
+      </svg>
+      <div class="guess-marker" id="guessMarker" style="left:10%"><span id="guessLabel"></span><div class="marker-dot"></div></div>
+      <div class="real-marker" id="realMarker"><span>Peak of Inflated Expectations</span><div class="marker-dot"></div></div>
+    </div>
+    <div class="hype-buttons">
+      <button class="hbtn" data-pos="8">Innovation trigger</button>
+      <button class="hbtn" data-pos="34">Peak of inflated expectations</button>
+      <button class="hbtn" data-pos="57">Trough of disillusionment</button>
+      <button class="hbtn" data-pos="80">Slope of enlightenment</button>
+      <button class="hbtn" data-pos="94">Plateau of productivity</button>
+    </div>
+    <div class="hype-reveal" id="hypeReveal"></div>
+  </div>
+</section>
+
+<!-- TOOL 5 -->
+<section>
+  <div class="wrap">
+    <div class="module-head"><span class="module-num">05 / DECISION MATRIX</span></div>
+    <h2>Build vs. buy, plotted</h2>
+    <p class="lede">MIT's data: bought-from-vendor agents succeed roughly <b>twice as often</b> as internal builds — but only in the right zone. Describe your use case.</p>
+    <div class="matrix-controls">
+      <div class="slider-row">
+        <label>Task specificity — vague goal ←→ one narrow job</label>
+        <input type="range" id="slSpecificity" min="0" max="100" value="50">
+      </div>
+      <div class="slider-row">
+        <label>Volume — occasional ←→ high-frequency</label>
+        <input type="range" id="slVolume" min="0" max="100" value="50">
+      </div>
+    </div>
+    <div class="quadrant" id="quadrant">
+      <div class="qline h"></div><div class="qline v"></div>
+      <div class="qlabel" style="top:6px; left:8px;">build, internal</div>
+      <div class="qlabel" style="top:6px; right:8px;">pilot theater risk</div>
+      <div class="qlabel" style="bottom:6px; left:8px;">skip it</div>
+      <div class="qlabel" style="bottom:6px; right:8px;">buy narrow &amp; vendor</div>
+      <div class="qdot" id="qdot"></div>
+    </div>
+    <div class="matrix-verdict" id="matrixVerdict"></div>
+  </div>
+</section>
+
+<!-- TOOL 6 -->
+<section>
+  <div class="wrap">
+    <div class="module-head"><span class="module-num">06 / COUNTERFACTUAL BRANCHER</span></div>
+    <h2>Skip orchestration — or build it first?</h2>
+    <p class="lede">Forrester and Gartner both call multi-agent orchestration the defining infrastructure priority of 2026 — the same role Kubernetes played for containers. Pick a path.</p>
+    <div class="branch-btns">
+      <button class="bbtn" data-path="skip"><b>Skip it</b>Ship the single agent now, add orchestration later if it takes off.</button>
+      <button class="bbtn" data-path="invest"><b>Build it first</b>Spend the extra sprint on multi-model routing and identity before shipping.</button>
+    </div>
+    <div class="cascade" id="cascadeSkip">
+      <div class="cascade-step"><b>Week 2 —</b> First agent works fine solo. Feels validated.</div>
+      <div class="cascade-step"><b>Week 6 —</b> Second use case needs a second agent. No shared identity layer, so each one gets bespoke access rules — exactly the pattern behind the 78% of orgs that don't treat agents as identity-bearing entities.</div>
+      <div class="cascade-step"><b>Week 10 —</b> One provider has an outage. Nothing routes around it — single-model architectures are already breaking whole workflows at this stage in 2026.</div>
+      <div class="cascade-step"><b>Week 14 —</b> Now retrofitting orchestration under a live system. This is the exact shape of the "innovation theater" pattern Gartner cites in its 40%-cancellation-by-2027 projection.</div>
+      <div class="reopen" onclick="resetBranch()">↺ try the other path</div>
+    </div>
+    <div class="cascade" id="cascadeInvest">
+      <div class="cascade-step"><b>Week 2 —</b> Slower start. No visible agent yet, just plumbing — identity, routing, audit logs.</div>
+      <div class="cascade-step"><b>Week 6 —</b> First agent ships onto infrastructure that was "boring" to build, which is precisely the trait that correlates with reaching production per the field data above.</div>
+      <div class="cascade-step"><b>Week 10 —</b> Second and third agents plug into the same layer. Adding capability, not rebuilding foundation.</div>
+      <div class="cascade-step"><b>Week 14 —</b> You're now in the roughly 11% of pilots that made it this far — not because the model was smarter, but because the boring infrastructure decision came first.</div>
+      <div class="reopen" onclick="resetBranch()">↺ try the other path</div>
+    </div>
+  </div>
+</section>
+
+<section class="close">
+  <div class="wrap">
+    <div class="eyebrow">carry this out with you</div>
+    <h2 style="font-size:30px;">Three models, not five hundred facts</h2>
+    <div class="models">
+      <div class="model-card"><div class="mono">Model 1</div><p><b style="color:var(--text)">The gap is the story.</b> Capability is improving fast — the gap between what agents can do and what gets safely shipped is where almost everyone loses.</p></div>
+      <div class="model-card"><div class="mono">Model 2</div><p><b style="color:var(--text)">Boring beats ambitious.</b> Narrow, bought, high-volume, governed — beats broad, built, novel, ungoverned — nearly every time in the current data.</p></div>
+      <div class="model-card"><div class="mono">Model 3</div><p><b style="color:var(--text)">Infrastructure is a sequencing decision.</b> Orchestration and identity aren't nice-to-haves added later — skipping them is what turns a pilot into permanent purgatory.</p></div>
+    </div>
+  </div>
+</section>
+
+<footer>compiled from Gartner, MIT, McKinsey &amp; Forrester field data, mid-2026 · figures cited inline where used</footer>
+
+<script>
+// HERO GAUGE ANIMATE
+window.addEventListener('load', ()=>{
+  const arc = document.getElementById('heroArc');
+  const len = 377 * (1 - 0.89);
+  requestAnimationFrame(()=>{ arc.style.transition='stroke-dashoffset 1.4s cubic-bezier(.2,.8,.3,1)'; arc.style.strokeDashoffset = len; });
+});
+
+// TOOL 1: autonomy ladder
+const taskData = {
+  "0": {level:1, note:"This looks like it needs 'AI' but it's actually Level 1 — fixed rules. Most teams over-build this and add an LLM they don't need, which is part of why 40% of enterprise apps will claim agent features by end of 2026 that barely qualify."},
+  "1": {level:2, note:"Dynamic routing, predefined outcomes. This is the sweet spot most successful 2026 deployments actually live in — sequence decided by the model, actions still bounded."},
+  "2": {level:3, note:"This is genuinely Level 3 territory — plan, execute, adapt. It's also where most of the 89% production-failure rate concentrates. The task is real, the risk is real."},
+  "3": {level:3, note:"Nominally Level 3, but almost no organization actually lets an agent finalize a contract unsupervised in 2026 — the gap between 'technically capable' and 'actually deployed' is widest exactly here."}
+};
+document.getElementById('taskSelect').addEventListener('change', e=>{
+  document.querySelectorAll('.rung').forEach(r=>r.classList.remove('active'));
+  const box = document.getElementById('ladderContradiction');
+  if(!e.target.value){ box.classList.remove('show'); return; }
+  const d = taskData[e.target.value];
+  document.getElementById('rung'+d.level).classList.add('active');
+  box.textContent = d.note;
+  box.classList.add('show');
+});
+
+// TOOL 2: pilot purgatory calculator
+const factors = [
+  {id:'f1', label:'We\'re buying a vendor agent rather than building in-house', weight:2, note:'bought agents succeed ~2x as often as internal builds'},
+  {id:'f2', label:'The use case is one narrow, high-volume task — not a broad platform play', weight:2, note:'narrow beats broad in every dataset cited above'},
+  {id:'f3', label:'We have a named business owner and a defined KPI before writing code', weight:1.5, note:'the top predictor separating the 11% from the 89%'},
+  {id:'f4', label:'Identity and access controls are designed upfront, not bolted on later', weight:1.5, note:'only 22% of orgs currently do this'},
+  {id:'f5', label:'We\'re prepared for the agent to be confidently wrong, not just to crash', weight:1, note:'most agent failures are fluent, plausible, wrong outputs'}
+];
+const toggleList = document.getElementById('toggleList');
+factors.forEach(f=>{
+  const row = document.createElement('div');
+  row.className='toggle-row'; row.id=f.id;
+  row.innerHTML = `<span>${f.label}</span><div class="switch"></div>`;
+  row.addEventListener('click', ()=>{ row.classList.toggle('on'); updateVerdict(); });
+  toggleList.appendChild(row);
+});
+function updateVerdict(){
+  let score=0, max=0;
+  factors.forEach(f=>{ max+=f.weight; if(document.getElementById(f.id).classList.contains('on')) score+=f.weight; });
+  const pct = Math.round((score/max)*100);
+  const base = 11; // baseline production-success rate
+  const projected = Math.min(89, Math.round(base + pct*0.75));
+  document.getElementById('verdictScore').textContent = projected+'%';
+  let text;
+  if(projected < 25) text = "<b>Pilot purgatory zone.</b> This profile matches the pattern behind the 89% that never ship.";
+  else if(projected < 55) text = "<b>Coin-flip territory.</b> One or two more factors would meaningfully change your odds.";
+  else text = "<b>Reaching-production profile.</b> This matches the traits MIT found doubled success rates.";
+  document.getElementById('verdictText').innerHTML = 'Estimated odds of reaching production: '+text;
+}
+
+// TOOL 3: blind spot scanner
+const scans = [
+  {q:"\"We have human-in-the-loop.\"", a:"For which decisions, specifically? Most teams mean 'someone could theoretically look' — not a defined approval gate on high-stakes actions."},
+  {q:"\"We'd know if an agent went rogue.\"", a:"An internal AI agent error at Meta briefly exposed sensitive internal data in 2026 before anyone caught it — the failure mode is quiet, not dramatic."},
+  {q:"\"Our agents don't need their own accounts.\"", a:"Only 22% of organizations treat agents as identity-bearing entities with formal access controls. The other 78% are one shared credential away from an unauditable incident."},
+  {q:"\"We tested it, it works.\"", a:"An agent can score well on a single attempt and still fail dramatically more often when required to be reliable across repeated runs — benchmark scores hide that variance."},
+  {q:"\"Compliance is next quarter's problem.\"", a:"Key regulatory deadlines land August 2026 and August 2027. Mapping systems and building documentation takes longer than most teams budget."}
+];
+const scanGrid = document.getElementById('scanGrid');
+scans.forEach((s,i)=>{
+  const el = document.createElement('div');
+  el.className='scan-item';
+  el.innerHTML = `<div class="scan-q">${s.q}</div><div class="scan-a">${s.a}</div>`;
+  el.addEventListener('click', ()=> el.classList.toggle('opened'));
+  scanGrid.appendChild(el);
+});
+
+// TOOL 4: hype cycle
+document.querySelectorAll('.hbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.hbtn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const pos = btn.dataset.pos;
+    document.getElementById('guessMarker').style.left = pos+'%';
+    document.getElementById('guessLabel').textContent = btn.textContent;
+    setTimeout(()=>{
+      const real = document.getElementById('realMarker');
+      real.style.left = '34%';
+      real.classList.add('show');
+      const reveal = document.getElementById('hypeReveal');
+      const correct = pos === '34';
+      reveal.innerHTML = correct
+        ? "Correct — and that's the uncomfortable part. Gartner places AI agents at the <b>Peak of Inflated Expectations</b> at the same moment GenAI broadly has already fallen into the Trough of Disillusionment. Two closely related technologies, opposite points on the curve."
+        : "Gartner actually places AI agents at the <b>Peak of Inflated Expectations</b> — while broader GenAI has already fallen into the Trough of Disillusionment. Two technologies that power each other, sitting at opposite ends of the same curve.";
+      reveal.classList.add('show');
+    }, 500);
+  });
+});
+
+// TOOL 5: build vs buy matrix
+const qdot = document.getElementById('qdot');
+const matrixVerdict = document.getElementById('matrixVerdict');
+function updateMatrix(){
+  const spec = document.getElementById('slSpecificity').value;
+  const vol = document.getElementById('slVolume').value;
+  qdot.style.left = spec+'%';
+  qdot.style.top = (100-vol)+'%';
+  let verdict;
+  if(spec>55 && vol>55) verdict = "<b>Buy, narrow, vendor.</b> This is the profile MIT found succeeds roughly 2x as often — a defined job, run often enough to justify the integration cost.";
+  else if(spec<=55 && vol>55) verdict = "<b>Pilot theater risk.</b> High volume but vague scope is exactly how impressive sandbox demos fail to survive contact with the real workflow.";
+  else if(spec>55 && vol<=55) verdict = "<b>Might not be worth agentic at all.</b> A narrow, low-frequency task is often cheaper as a simple script — 90% of well-defined workflows are better served by deterministic automation than an agent.";
+  else verdict = "<b>Build, internal, cautiously.</b> Vague and infrequent is the hardest zone to prove ROI in — expect this to be the first line item cut when budgets tighten.";
+  matrixVerdict.innerHTML = verdict;
+}
+document.getElementById('slSpecificity').addEventListener('input', updateMatrix);
+document.getElementById('slVolume').addEventListener('input', updateMatrix);
+updateMatrix();
+
+// TOOL 6: orchestration branch
+document.querySelectorAll('.bbtn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.bbtn').forEach(b=>b.classList.remove('chosen'));
+    btn.classList.add('chosen');
+    document.getElementById('cascadeSkip').classList.remove('show');
+    document.getElementById('cascadeInvest').classList.remove('show');
+    document.getElementById('cascade'+(btn.dataset.path==='skip'?'Skip':'Invest')).classList.add('show');
+  });
+});
+function resetBranch(){
+  document.querySelectorAll('.bbtn').forEach(b=>b.classList.remove('chosen'));
+  document.getElementById('cascadeSkip').classList.remove('show');
+  document.getElementById('cascadeInvest').classList.remove('show');
+  window.scrollTo({top: document.getElementById('cascadeSkip').getBoundingClientRect().top + window.scrollY - 200, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
