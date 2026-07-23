@@ -24,12 +24,12 @@
     "file": "articles/outcome-owning-agents.html"
   },
   {
-    "id": "02-federated-agent-swarms",
-    "title": "The Swarm Architecture",
-    "summary": "Moving past single 'God Models' toward specialized multi-agent networks that collaborate on zero-copy data layers.",
+    "id": "02-boring-agents-2026",
+    "title": "The most trusted agents aren't the smartest ones.They're the ones you can replay.",
+    "summary": "They're the ones you can replay.",
     "tags": ["Architecture", "Multi-Agent", "Canvas"],
     "date": "2026-07-18",
-    "file": "articles/02-federated-agent-swarms.html"
+    "file": "articles/boring-agents-2026.html"
   },
   {
     "id": "03-zero-copy-context",
