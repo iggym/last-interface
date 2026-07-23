@@ -36,8 +36,37 @@
   .mono{font-family:'JetBrains Mono',monospace;}
   .type{font-family:'Special Elite',monospace;}
 
+  /* ---------- Nav / Back Link ---------- */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--ink);
+    text-decoration: none;
+    padding: 6px 12px;
+    margin-top: 20px;
+    border: 1px solid var(--ink);
+    background: var(--paper);
+    transition: transform .12s ease, background-color .12s ease;
+  }
+  .back-link:hover {
+    background: var(--card);
+    transform: translate(-1px, -1px);
+  }
+  .back-link:active {
+    transform: translate(1px, 1px);
+  }
+  .back-link::before {
+    content: "←";
+    font-size: 14px;
+  }
+
   /* ---------- Hero ---------- */
-  .hero{padding:90px 0 50px;border-bottom:2px solid var(--ink);}
+  .hero{padding:24px 0 50px;border-bottom:2px solid var(--ink);}
   .eyebrow{
     font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;
     text-transform:uppercase;color:var(--stamp-red);margin-bottom:18px;
@@ -195,17 +224,15 @@
   .recap .card{padding:14px 18px;}
 
   @media (max-width:600px){
-    .hero{padding:60px 0 40px;}
+    .hero{padding:20px 0 30px;}
     section{padding:40px 0;}
   }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a class="back-link" style="font-size:12px;color:var(--faded); href="../index.html">Back to catalog</a>
+  <a class="back-link" href="../index.html">Back to catalog</a>
 
-  <!-- HERO -->
-  <div class="hero">
   <!-- HERO -->
   <div class="hero">
     <div class="eyebrow">Field notes — agent memory, 2026</div>
@@ -269,7 +296,6 @@
         <p class="fact" style="margin:10px 0 0;">Notice the confidence bar didn't drop as fast as the stale count rose. That gap is the actual danger: <span class="fact">an agent doesn't get quieter as it fills with bad data — it keeps answering just as fast, just as sure of itself.</span> One engineer building on this put it bluntly: <span class="fact">a confidently-recalled outdated memory is worse than the agent simply forgetting.</span><span class="cite"> · dev.to, 2026</span></p>
       </div>
     </div>
-  </div>
 
     <div class="model-box">
       <div class="model-name">Named model: "Confidently Wrong"</div>
@@ -414,11 +440,8 @@
       <div class="card"><span class="stamp">03</span><span class="model-name" style="display:inline-block;margin-left:10px;">The Assistant Test</span><p style="margin:8px 0 0;">Would a trusted human assistant do this without asking? That's the line — not whether the tech can.</p></div>
     </div>
     <p class="mono" style="font-size:12px;color:var(--faded);">Next time an agent tells you something about yourself with total confidence, the useful question isn't "how did it know that." It's "when did it last check."</p>
-<p class="mono" style="font-size:12px;color:var(--faded);">Next time an agent tells you...</p>
     <a class="back-link" href="../index.html">Back to catalog</a>
   </footer>
-</footer>
-
 </div>
 
 <script>
@@ -452,7 +475,6 @@ const landfillReveal = document.getElementById('landfillReveal');
 
 function renderLandfill(weeks){
   weekVal.textContent = weeks;
-  // stale % curve: slow start, accelerates, caps near 80%
   const stalePct = Math.min(80, Math.round(2 + Math.pow(weeks,1.5)*0.55));
   staleStat.textContent = stalePct + '%';
   const conf = weeks < 8 ? 'high' : weeks < 24 ? 'still high' : weeks < 40 ? 'unchanged' : 'unchanged';
@@ -609,31 +631,19 @@ function updateScore(){
     const reveal = document.getElementById('scoreReveal');
     let tier, note;
     if(pct >= 66){
-      tier = "High tolerance"; note = "You lean toward letting the agent act on its own judgment. Worth revisiting after the Assistant Test scenario above — this is exactly the profile the persuasion study targeted.";
+      tier = "High tolerance"; 
+      note = "You lean toward letting the agent act on its own judgment. Worth revisiting after exploring scenario boundaries.";
     } else if(pct >= 33){
-      tier = "Conditional"; note = "You want the convenience but with a visible leash — matches where most current regulatory guidance is landing: proceed, but disclose.";
+      tier = "Selective trust"; 
+      note = "You accept contextual utility but want explicit boundaries on shared cross-app state.";
     } else {
-      tier = "Low tolerance"; note = "You want to be asked. That's a legitimate default, and current products mostly don't offer it — 'don't share what you wouldn't want remembered' is often the only control on offer today.";
+      tier = "Strict boundary"; 
+      note = "You prefer zero-retention or explicitly confirmed agent operations.";
     }
-    reveal.innerHTML = `<span class="stamp">score: ${pct}/100</span><div class="model-name" style="margin-top:8px;">${tier}</div><p style="margin:6px 0 0;color:var(--ink-soft);">${note}</p>`;
+    reveal.innerHTML = `<span class="stamp">${tier}</span><p class="fact" style="margin:10px 0 0;">${note}</p>`;
     reveal.classList.add('show');
   }
 }
 </script>
-</script>
-
-<script>
-(function() {
-  const beaconUrl = "https://last-interface-analytics-worker.iggy-mw.workers.dev/collect";
-  fetch(beaconUrl, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path: window.location.pathname }),
-    keepalive: true
-  }).catch(err => console.error("Analytics error:", err));
-})();
-</script>
-</body>
-</html>
 </body>
 </html>
