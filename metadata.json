@@ -40,11 +40,11 @@
     "file": "articles/03-zero-copy-context.html"
   },
   {
-    "id": "04-intent-translation-layer",
-    "title": "The Intent Engine",
-    "summary": "Translating natural human goals into structured execution graphs without rigid manual software inputs.",
+    "id": "04-remember",
+    "title": "Your AI agent will remember you.",
+    "summary": "The question nobody's marketing slide asks: remember you correctly?.",
     "tags": ["UX", "State Graphs", "Simulation"],
     "date": "2026-07-10",
-    "file": "articles/04-intent-translation-layer.html"
+    "file": "articles/remember.html"
   }
 ]
