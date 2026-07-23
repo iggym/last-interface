@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Filing Problem — How AI Agents Remember You</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1ECE0;
+    --card:#E7DFCB;
+    --card-dark:#DCD2B8;
+    --ink:#2B2620;
+    --ink-soft:#585045;
+    --faded:#948A78;
+    --stamp-red:#B23A2E;
+    --stamp-red-soft:#D8CFC0;
+    --filed-green:#4A5D3A;
+    --rule:#C9BFA7;
+    --shadow: 2px 3px 0 rgba(43,38,32,0.12);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      radial-gradient(rgba(43,38,32,0.025) 1px, transparent 1px);
+    background-size: 3px 3px;
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+  .type{font-family:'Special Elite',monospace;}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:90px 0 50px;border-bottom:2px solid var(--ink);}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--stamp-red);margin-bottom:18px;
+    display:flex;align-items:center;gap:10px;
+  }
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--stamp-red);}
+  h1{
+    font-family:'Special Elite',monospace;
+    font-size:clamp(30px,5.4vw,50px);
+    line-height:1.14;font-weight:400;margin:0 0 22px;letter-spacing:-0.01em;
+  }
+  .hero p.lede{font-size:19px;color:var(--ink-soft);max-width:58ch;margin:0 0 34px;}
+
+  /* index card, the signature element */
+  .card{
+    background:var(--card);
+    border:1px solid var(--ink);
+    box-shadow:var(--shadow);
+    padding:22px 24px;
+    position:relative;
+  }
+  .card::before{
+    content:"";position:absolute;top:10px;left:0;right:0;height:1px;background:var(--rule);
+  }
+  .card::after{
+    content:"";position:absolute;top:16px;left:0;right:0;height:1px;background:var(--rule);
+  }
+  .card-label{
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--faded);margin-bottom:6px;display:block;
+  }
+  .stamp{
+    display:inline-block;font-family:'Special Elite',monospace;
+    font-size:12px;letter-spacing:.08em;text-transform:uppercase;
+    border:2px solid var(--stamp-red);color:var(--stamp-red);
+    padding:3px 10px;transform:rotate(-3deg);border-radius:2px;
+    background:rgba(178,58,46,0.06);
+  }
+  .stamp.green{border-color:var(--filed-green);color:var(--filed-green);background:rgba(74,93,58,0.07);}
+
+  button.btn{
+    font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.04em;
+    background:var(--ink);color:var(--paper);border:none;padding:11px 18px;
+    cursor:pointer;box-shadow:2px 2px 0 rgba(43,38,32,0.3);
+    transition:transform .12s ease;
+  }
+  button.btn:hover{transform:translate(-1px,-1px);}
+  button.btn:active{transform:translate(1px,1px);box-shadow:none;}
+  button.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ink);box-shadow:none;}
+  button.btn:disabled{opacity:.4;cursor:default;}
+
+  /* ---------- sections ---------- */
+  section{padding:56px 0;border-bottom:1px solid var(--rule);}
+  section:last-of-type{border-bottom:none;}
+  h2{
+    font-family:'Special Elite',monospace;font-weight:400;font-size:clamp(22px,3.4vw,30px);
+    margin:0 0 8px;
+  }
+  .section-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--stamp-red);letter-spacing:.1em;}
+  p{color:var(--ink-soft);}
+  .fact{color:var(--ink);}
+  .cite{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faded);}
+
+  .model-box{
+    background:var(--card-dark);border-left:4px solid var(--stamp-red);
+    padding:18px 22px;margin:22px 0;
+  }
+  .model-name{font-family:'Special Elite',monospace;font-size:19px;margin-bottom:6px;}
+
+  .guess-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px;}
+  .guess-row button{
+    font-family:'JetBrains Mono',monospace;font-size:13px;padding:8px 14px;
+    background:var(--paper);border:1px solid var(--ink);cursor:pointer;
+  }
+  .guess-row button.picked{background:var(--ink);color:var(--paper);}
+
+  .reveal{
+    margin-top:16px;padding:16px 18px;background:var(--paper);border:1px dashed var(--ink);
+    display:none;
+  }
+  .reveal.show{display:block;}
+
+  /* slider tool */
+  .slider-tool{margin-top:18px;}
+  input[type=range]{width:100%;accent-color:var(--stamp-red);}
+  .stat-row{display:flex;gap:14px;flex-wrap:wrap;margin-top:16px;}
+  .stat{
+    flex:1;min-width:130px;background:var(--card);border:1px solid var(--rule);padding:12px 14px;
+  }
+  .stat .num{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:700;}
+  .stat .lab{font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;color:var(--faded);letter-spacing:.06em;}
+  .stat.bad .num{color:var(--stamp-red);}
+  .stat.good .num{color:var(--filed-green);}
+
+  .landfill-vis{
+    margin-top:18px;display:flex;flex-wrap:wrap;gap:5px;min-height:70px;align-content:flex-start;
+  }
+  .chip{
+    width:16px;height:16px;border:1px solid var(--ink);background:var(--filed-green);
+    transition:background .3s;
+  }
+  .chip.stale{background:var(--stamp-red);}
+
+  /* matrix tool */
+  .matrix-controls{display:grid;gap:18px;margin-top:18px;}
+  .control label{
+    display:block;font-family:'JetBrains Mono',monospace;font-size:12px;
+    text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft);margin-bottom:6px;
+  }
+  select{
+    font-family:'JetBrains Mono',monospace;font-size:14px;padding:9px 10px;
+    background:var(--paper);border:1px solid var(--ink);width:100%;color:var(--ink);
+  }
+  .verdict{
+    margin-top:20px;padding:18px 20px;background:var(--card);border:1px solid var(--ink);
+  }
+  .verdict .tier{font-family:'Special Elite',monospace;font-size:20px;margin-bottom:6px;}
+
+  /* checklist */
+  .check-item{
+    display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--rule);
+    cursor:pointer;
+  }
+  .check-item .box{
+    width:18px;height:18px;border:1.5px solid var(--ink);flex-shrink:0;margin-top:3px;
+    display:flex;align-items:center;justify-content:center;font-size:12px;
+  }
+  .check-item.checked .box{background:var(--ink);color:var(--paper);}
+  .check-item .txt{font-size:15px;}
+  .check-item .note{display:none;font-size:13px;color:var(--stamp-red);margin-top:6px;font-family:'JetBrains Mono',monospace;}
+  .check-item.checked .note{display:block;}
+
+  /* brancher */
+  .branch-scene{background:var(--card);border:1px solid var(--ink);padding:20px 22px;margin-top:18px;}
+  .branch-scene .prompt{font-size:16px;margin-bottom:14px;}
+  .branch-choices{display:flex;gap:10px;flex-wrap:wrap;}
+  .branch-path{
+    font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--faded);margin-top:14px;
+  }
+
+  /* score quiz */
+  .quiz-q{margin-bottom:20px;}
+  .quiz-q .q{font-weight:600;color:var(--ink);margin-bottom:10px;}
+  .score-bar-wrap{background:var(--card);border:1px solid var(--ink);height:22px;margin-top:10px;position:relative;}
+  .score-bar-fill{height:100%;background:var(--stamp-red);width:0%;transition:width .5s ease;}
+
+  /* comparison table */
+  table{width:100%;border-collapse:collapse;margin-top:16px;font-size:14px;}
+  th,td{text-align:left;padding:10px 8px;border-bottom:1px solid var(--rule);}
+  th{font-family:'JetBrains Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--faded);}
+  td.win{color:var(--filed-green);font-weight:700;}
+
+  footer{padding:50px 0 80px;}
+  .recap{display:grid;gap:10px;margin:20px 0 30px;}
+  .recap .card{padding:14px 18px;}
+
+  @media (max-width:600px){
+    .hero{padding:60px 0 40px;}
+    section{padding:40px 0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="wrap">
+
+  <a class="back-link" href="../index.html">Back to catalog</a>
+
+  <!-- HERO -->
+  <div class="hero">
+  <!-- HERO -->
+  <div class="hero">
+    <div class="eyebrow">Field notes — agent memory, 2026</div>
+    <h1>Your AI agent will remember you.<br>The question nobody's marketing<br>slide asks: remember you <em>correctly</em>?</h1>
+    <p class="lede">Every lab is racing to ship agents that feel like a colleague who's worked with you for years. The demo is always the same: it remembers your coffee order. Nobody demos what happens six months later, when it still confidently thinks you drink oat milk.</p>
+
+    <div class="card" id="heroCard">
+      <span class="card-label">Index card 0001 — prediction</span>
+      <p style="margin:0 0 12px;font-size:15px;">Before you scroll: production AI agents lose real, measurable accuracy after how many days of accumulating memory <em>without</em> active pruning?</p>
+      <div class="guess-row" id="heroGuess">
+        <button data-v="7">~7 days</button>
+        <button data-v="30">~30 days</button>
+        <button data-v="90">~90 days</button>
+        <button data-v="365">~1 year</button>
+      </div>
+      <div class="reveal" id="heroReveal">
+        <span class="stamp">on file</span>
+        <p class="fact" style="margin:10px 0 0;">Analysts tracking production deployments put the number at roughly <strong>30 days</strong> — the point where <span class="fact">accuracy degrades meaningfully without a structured memory layer</span> doing active upkeep.<span class="cite"> · industry benchmark tracking, 2026</span></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION 1: THE PROBLEM -->
+  <section>
+    <div class="section-num">01 — the pitch vs. the file cabinet</div>
+    <h2>Every agent is a colleague with amnesia</h2>
+    <p><span class="fact">57% of organizations now have AI agents running in production</span>, and the gap between "impressive demo" and "actually useful over months" almost always comes down to one thing: what the agent carries between sessions.<span class="cite"> · Gartner 2026 survey</span></p>
+    <p>It shows up in ugly, specific ways. One benchmark found agents <span class="fact">resolving only 35% of multi-turn customer support tasks end-to-end</span> — the single biggest failure mode being plain context loss, the agent forgetting what the customer already told it two messages ago.<span class="cite"> · Salesforce benchmark, 2025</span></p>
+    <p>So the industry's answer has been: give it memory. Vector databases, graph stores, summarization pipelines. Mem0, Zep, Cognee, Letta — a whole new product category built in about eighteen months, one of them growing <span class="fact">pipeline volume 500x to over a million runs in a single year</span>.<span class="cite"> · Cognee, 2026</span></p>
+    <p>Which fixes the amnesia. And creates a second, quieter problem almost nobody budgets for.</p>
+  </section>
+
+  <!-- SECTION 2: LANDFILL SIMULATOR + MODEL 1 -->
+  <section>
+    <div class="section-num">02 — what accumulation actually looks like</div>
+    <h2>The Memory Landfill Simulator</h2>
+    <p>Drag the slider below. It's an agent's memory store, filling up week by week with zero pruning — every preference, every one-time fact, every "just for today" detail, kept forever.</p>
+
+    <div class="card">
+      <span class="card-label">Before you drag — guess</span>
+      <p style="margin:0;font-size:15px;">At 52 weeks with no pruning, what share of an agent's stored "facts" do you think are stale or contradicted?</p>
+      <div class="guess-row" id="landfillGuess">
+        <button data-v="10">~10%</button>
+        <button data-v="30">~30%</button>
+        <button data-v="55">~55%</button>
+        <button data-v="80">~80%</button>
+      </div>
+    </div>
+
+    <div class="slider-tool">
+      <label class="mono" style="font-size:12px;text-transform:uppercase;color:var(--ink-soft);">Weeks without pruning: <span id="weekVal">1</span></label>
+      <input type="range" id="weekSlider" min="1" max="52" value="1">
+      <div class="stat-row">
+        <div class="stat bad"><div class="num" id="staleStat">2%</div><div class="lab">stale / stored</div></div>
+        <div class="stat bad"><div class="num" id="confStat">low</div><div class="lab">retrieval confidence</div></div>
+        <div class="stat"><div class="num" id="tokStat">1x</div><div class="lab">context bloat</div></div>
+      </div>
+      <div class="landfill-vis" id="landfillVis"></div>
+      <div class="reveal" id="landfillReveal">
+        <span class="stamp">confidently wrong</span>
+        <p class="fact" style="margin:10px 0 0;">Notice the confidence bar didn't drop as fast as the stale count rose. That gap is the actual danger: <span class="fact">an agent doesn't get quieter as it fills with bad data — it keeps answering just as fast, just as sure of itself.</span> One engineer building on this put it bluntly: <span class="fact">a confidently-recalled outdated memory is worse than the agent simply forgetting.</span><span class="cite"> · dev.to, 2026</span></p>
+      </div>
+    </div>
+  </div>
+
+    <div class="model-box">
+      <div class="model-name">Named model: "Confidently Wrong"</div>
+      <p style="margin:0;color:var(--ink-soft);">Not "the agent forgot." The opposite failure: the agent <em>remembers</em>, states it plainly, and is out of date. A human colleague who's unsure will hedge — "I think it was Tuesday?" A memory-backed agent retrieves a stale fact with the same tone of voice as a fresh one. The danger isn't forgetting. It's forgetting to flag what it forgot to update.</p>
+    </div>
+  </section>
+
+  <!-- SECTION 3: DECISION MATRIX -->
+  <section>
+    <div class="section-num">03 — before you build one</div>
+    <h2>Should this project even have a memory layer?</h2>
+    <p>Set the three dials below to your actual project, not the AI-conference version of it.</p>
+
+    <div class="card">
+      <span class="card-label">Before you set the dials — guess</span>
+      <p style="margin:0;font-size:15px;">For a project that only lives three days (a one-off script, a prototype), what's the right memory architecture?</p>
+      <div class="guess-row" id="matrixGuess">
+        <button data-v="vector">Vector store</button>
+        <button data-v="graph">Graph store</button>
+        <button data-v="none">None — skip it</button>
+      </div>
+    </div>
+
+    <div class="matrix-controls">
+      <div class="control">
+        <label>How long does this project actually live?</label>
+        <select id="lifespan">
+          <option value="short">A few days — prototype / one-off</option>
+          <option value="medium">Weeks to months — real product, changing</option>
+          <option value="long">Long-lived, many users, evolving relationships</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>What does it mostly need to remember?</label>
+        <select id="shape">
+          <option value="flat">Simple flat facts (name, preference, last order)</option>
+          <option value="relational">How things connect (who reports to whom, what depends on what)</option>
+          <option value="temporal">How facts change over time (job changes, prices update)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label>Who's setting it up?</label>
+        <select id="ops">
+          <option value="solo">Solo builder, no ops team</option>
+          <option value="team">Small team, some infra tolerance</option>
+          <option value="enterprise">Enterprise, compliance requirements</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="verdict" id="matrixVerdict"></div>
+
+    <div class="model-box">
+      <div class="model-name">Named model: "The Filing System" (not the file)</div>
+      <p style="margin:0;color:var(--ink-soft);">The best-performing setups treat memory as a filing system that actively supersedes and discards, not one growing file. One builder's rule of thumb: <span class="fact">accumulating context is easy — expiring it is the hard part nobody does.</span> A memory store nobody prunes isn't an asset. It's a landfill with better UX.<span class="cite"> · Brennan Moore, 2026</span></p>
+    </div>
+  </section>
+
+  <!-- SECTION 4: CONSENT CHECKLIST -->
+  <section>
+    <div class="section-num">04 — the part users don't see</div>
+    <h2>The consent gaps checklist</h2>
+    <p>Click each item. Some of these are things agents already do today — check the ones you think a well-behaved agent should be allowed to do <em>without</em> asking first.</p>
+
+    <div id="checklist">
+      <div class="check-item" data-note="A single prompt can trigger a cascade of actions across dozens of connected services — none authorized individually. Consent given once at setup covers all of them, forever.">
+        <div class="box"></div>
+        <div>
+          <div class="txt">Infer your home address from a delivery you mentioned once, and reuse it in a different app three weeks later.</div>
+          <div class="note"></div>
+        </div>
+      </div>
+      <div class="check-item" data-note="Right to Erasure (GDPR Article 17) was built for searchable database rows. Once a fact is folded into embeddings or a model's weights, 'delete it' stops being a simple operation.">
+        <div class="box"></div>
+        <div>
+          <div class="txt">Keep a fact you shared even after you ask the agent to delete your account.</div>
+          <div class="note"></div>
+        </div>
+      </div>
+      <div class="check-item" data-note="Regulators in Spain have flagged this exact risk: intermediate operational logs invisible to the user, generated as a side effect of the agent working, that still contain personal detail.">
+        <div class="box"></div>
+        <div>
+          <div class="txt">Generate internal working notes about you that you never see and never approved — but that still shape what it does next.</div>
+          <div class="note"></div>
+        </div>
+      </div>
+      <div class="check-item" data-note="A university study did exactly this on Reddit — testing AI-generated persuasion on real users who never knew they'd been enrolled. The backlash when it surfaced was strong enough that the researchers didn't pursue publication.">
+        <div class="box"></div>
+        <div>
+          <div class="txt">Use what it's learned about your personality to phrase a request more persuasively, without saying so.</div>
+          <div class="note"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 5: ASSISTANT TEST BRANCHER -->
+  <section>
+    <div class="section-num">05 — the analog test</div>
+    <h2>Run the executive assistant test</h2>
+    <p>Here's a framework worth stealing directly: before judging whether an agent's memory feature is helpful or invasive, imagine a human doing the exact same thing. Walk through one, choice by choice.</p>
+
+    <div class="model-box">
+      <div class="model-name">Named model: "The Assistant Test"</div>
+      <p style="margin:0;color:var(--ink-soft);">You've worked with the same human executive assistant for years. They know you take the aisle seat. That's convenient, unremarkable, earned trust. The test is finding the exact point on the same spectrum where it stops being <em>that</em>, and starts being something you never actually agreed to.</p>
+    </div>
+
+    <div class="branch-scene" id="branchScene"></div>
+  </section>
+
+  <!-- SECTION 6: COMFORT SCORE -->
+  <section>
+    <div class="section-num">06 — your number</div>
+    <h2>Your memory comfort score</h2>
+    <p>Three questions. Answer honestly — this one's just for you.</p>
+    <div id="quiz"></div>
+    <div class="score-bar-wrap"><div class="score-bar-fill" id="scoreBar"></div></div>
+    <div class="reveal" id="scoreReveal"></div>
+  </section>
+
+  <!-- SECTION 7: ARCHITECTURE COMPARISON -->
+  <section>
+    <div class="section-num">07 — for the builders</div>
+    <h2>If you're actually shipping this</h2>
+    <p>One real number, since most of this discourse is vibes: on LongMemEval's temporal reasoning tests — the ones that check whether an agent notices a fact changed, not just that it exists — <span class="fact">Zep's temporal knowledge graph scored 63.8%, against 49.0% for mem0's more standard approach</span>, largely because Zep explicitly tracks <em>when</em> facts were true.<span class="cite"> · LongMemEval benchmark, 2026</span></p>
+    <table>
+      <tr><th>Approach</th><th>Best at</th><th>Weak at</th></tr>
+      <tr><td>Vector store</td><td>Simple semantic recall, fast to ship</td><td>Multi-hop reasoning, doesn't know a fact went stale</td></tr>
+      <tr><td class="win">Graph / temporal</td><td class="win">Tracking how facts change over time</td><td>More setup, more to operate</td></tr>
+      <tr><td>SQL / relational</td><td>Structured facts, auditable, boring in a good way</td><td>Poor at fuzzy semantic search</td></tr>
+    </table>
+    <p style="margin-top:14px;">The practical rule that keeps surfacing across teams doing this in production: <span class="fact">use hybrid storage — vector for semantic search, graph or temporal for relationships and change, SQL for the facts that need to be audited.</span> Skip all of it for anything that lives less than a few days.<span class="cite"> · byteiota, 2026</span></p>
+  </section>
+
+  <!-- FOOTER RECAP -->
+  <footer>
+    <div class="section-num">on file</div>
+    <h2>Three cards to keep</h2>
+    <div class="recap">
+      <div class="card"><span class="stamp">01</span><span class="model-name" style="display:inline-block;margin-left:10px;">Confidently Wrong</span><p style="margin:8px 0 0;">A stale memory retrieved with full confidence is worse than the agent having no memory at all.</p></div>
+      <div class="card"><span class="stamp">02</span><span class="model-name" style="display:inline-block;margin-left:10px;">The Filing System</span><p style="margin:8px 0 0;">Memory that's never pruned isn't an asset — it's a landfill with better UX.</p></div>
+      <div class="card"><span class="stamp">03</span><span class="model-name" style="display:inline-block;margin-left:10px;">The Assistant Test</span><p style="margin:8px 0 0;">Would a trusted human assistant do this without asking? That's the line — not whether the tech can.</p></div>
+    </div>
+    <p class="mono" style="font-size:12px;color:var(--faded);">Next time an agent tells you something about yourself with total confidence, the useful question isn't "how did it know that." It's "when did it last check."</p>
+<p class="mono" style="font-size:12px;color:var(--faded);">Next time an agent tells you...</p>
+    <a class="back-link" href="../index.html">Back to catalog</a>
+  </footer>
+</footer>
+
+</div>
+
+<script>
+// ---- helper: guess buttons ----
+function wireGuess(containerId, revealId, onPick){
+  const box = document.getElementById(containerId);
+  if(!box) return;
+  box.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      box.querySelectorAll('button').forEach(b=>b.classList.remove('picked'));
+      btn.classList.add('picked');
+      if(revealId){
+        const r = document.getElementById(revealId);
+        if(r) r.classList.add('show');
+      }
+      if(onPick) onPick(btn.dataset.v);
+    });
+  });
+}
+wireGuess('heroGuess','heroReveal');
+wireGuess('landfillGuess','landfillReveal');
+
+// ---- landfill simulator ----
+const weekSlider = document.getElementById('weekSlider');
+const weekVal = document.getElementById('weekVal');
+const staleStat = document.getElementById('staleStat');
+const confStat = document.getElementById('confStat');
+const tokStat = document.getElementById('tokStat');
+const landfillVis = document.getElementById('landfillVis');
+const landfillReveal = document.getElementById('landfillReveal');
+
+function renderLandfill(weeks){
+  weekVal.textContent = weeks;
+  // stale % curve: slow start, accelerates, caps near 80%
+  const stalePct = Math.min(80, Math.round(2 + Math.pow(weeks,1.5)*0.55));
+  staleStat.textContent = stalePct + '%';
+  const conf = weeks < 8 ? 'high' : weeks < 24 ? 'still high' : weeks < 40 ? 'unchanged' : 'unchanged';
+  confStat.textContent = conf;
+  const bloat = (1 + weeks*0.18).toFixed(1) + 'x';
+  tokStat.textContent = bloat;
+
+  const total = 60;
+  const staleCount = Math.round(total * stalePct/100);
+  landfillVis.innerHTML = '';
+  for(let i=0;i<total;i++){
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (i < staleCount ? ' stale' : '');
+    landfillVis.appendChild(chip);
+  }
+  if(weeks >= 40) landfillReveal.classList.add('show');
+}
+renderLandfill(1);
+weekSlider.addEventListener('input', e=> renderLandfill(parseInt(e.target.value)));
+
+// ---- decision matrix ----
+wireGuess('matrixGuess', null);
+const lifespan = document.getElementById('lifespan');
+const shape = document.getElementById('shape');
+const ops = document.getElementById('ops');
+const verdict = document.getElementById('matrixVerdict');
+
+function computeVerdict(){
+  const l = lifespan.value, s = shape.value, o = ops.value;
+  let tier, reason, stamp='green';
+  if(l === 'short'){
+    tier = 'Skip memory entirely';
+    reason = "Setup overhead exceeds the value here — the project won't live long enough to benefit, and the context window alone is enough. Add infrastructure only when a project outlives a few days.";
+    stamp='green';
+  } else if(s === 'temporal'){
+    tier = 'Graph / temporal store';
+    reason = "You need to know not just facts but when they stopped being true — exactly what temporal knowledge graphs are built for, and where they measurably beat plain vector recall on change-tracking.";
+    stamp='';
+  } else if(s === 'relational' && (o==='team'||o==='enterprise')){
+    tier = 'Graph-native, hybrid with SQL';
+    reason = "Connected entities (who depends on what, who reports to whom) break plain vector similarity. Pair graph storage with SQL for anything that needs to be audited.";
+    stamp='';
+  } else if(o === 'solo' && s==='flat'){
+    tier = 'Simple vector store';
+    reason = "Flat facts, single builder, no compliance overhead — a vector store like Chroma is enough. Don't build a filing cabinet for a shoebox of index cards.";
+    stamp='green';
+  } else {
+    tier = 'Hybrid: vector + SQL';
+    reason = "Vector for semantic recall, SQL for the structured facts that need to survive an audit. Add graph only once relationships between facts start mattering more than the facts themselves.";
+    stamp='';
+  }
+  verdict.innerHTML = `<span class="stamp ${stamp}">recommendation</span><div class="tier" style="margin-top:10px;">${tier}</div><p style="margin:0;color:var(--ink-soft);">${reason}</p>`;
+}
+[lifespan,shape,ops].forEach(el=>el.addEventListener('change', computeVerdict));
+computeVerdict();
+
+// ---- checklist ----
+document.querySelectorAll('.check-item').forEach(item=>{
+  const note = item.querySelector('.note');
+  note.textContent = item.dataset.note;
+  item.addEventListener('click', ()=>{
+    item.classList.toggle('checked');
+    item.querySelector('.box').textContent = item.classList.contains('checked') ? '✓' : '';
+  });
+});
+
+// ---- assistant test brancher ----
+const scenes = [
+  {
+    prompt: "The agent notices you always book the aisle seat, and books it by default without asking.",
+    choices: [
+      {label:"Fine — that's what a good assistant does", next:1},
+      {label:"Already too much — I never told it to remember that", next:'end_early'}
+    ]
+  },
+  {
+    prompt: "It starts recalling your home address across a different app than the one you gave it to, because both apps share the same agent's memory.",
+    choices: [
+      {label:"Still fine — it's the same 'assistant', just in a new room", next:2},
+      {label:"That's the line. A human assistant wouldn't casually mention it to a stranger app.", next:'end_mid'}
+    ]
+  },
+  {
+    prompt: "To convince you to confirm a booking faster, it phrases the request using a persuasion style it inferred works well on you specifically — without telling you it's doing that.",
+    choices: [
+      {label:"That's manipulation dressed as convenience", next:'end_late'},
+      {label:"If it gets me what I wanted anyway, who cares", next:'end_late_ok'}
+    ]
+  }
+];
+const endings = {
+  end_early: "You drew the line earlier than most people do in practice — and earlier than most product defaults today. Reasonable. Most agents currently ship the aisle-seat behavior on by default.",
+  end_mid: "This is roughly where regulators are drawing it too: a single prompt or memory store now quietly triggers actions across services never individually authorized — consent given once, applied everywhere, forever.",
+  end_late: "This is the actual finding that ended a university study early: researchers tested AI-generated persuasion tuned to individual users on real people who never knew they'd been enrolled. When it surfaced, the backlash was strong enough that they didn't pursue publication.",
+  end_late_ok: "Worth sitting with: the outcome being 'what you wanted anyway' is exactly why covert personalization is hard to catch in the moment — the harm isn't in any single interaction, it's in never knowing which of your decisions were actually yours."
+};
+let sceneIdx = 0;
+const branchScene = document.getElementById('branchScene');
+function renderScene(idx){
+  if(typeof idx === 'string'){
+    branchScene.innerHTML = `<span class="stamp">on file</span><p class="prompt fact" style="margin-top:12px;">${endings[idx]}</p><div class="branch-path">— end of scenario. scroll on. —</div>`;
+    return;
+  }
+  const scene = scenes[idx];
+  branchScene.innerHTML = `<div class="prompt">${scene.prompt}</div><div class="branch-choices"></div><div class="branch-path">step ${idx+1} of 3</div>`;
+  const choiceBox = branchScene.querySelector('.branch-choices');
+  scene.choices.forEach(c=>{
+    const b = document.createElement('button');
+    b.className='btn ghost';
+    b.textContent = c.label;
+    b.addEventListener('click', ()=> renderScene(c.next));
+    choiceBox.appendChild(b);
+  });
+}
+renderScene(0);
+
+// ---- comfort quiz ----
+const quizQs = [
+  {q:"An agent should proactively act on an inference it made about you, without confirming first.", weight:2},
+  {q:"It's fine for an agent's memory of you to be shared across every app that uses the same provider.", weight:2},
+  {q:"You'd be comfortable if you couldn't fully delete something an agent learned about you.", weight:3}
+];
+let quizAnswers = {};
+const quizBox = document.getElementById('quiz');
+quizQs.forEach((item,i)=>{
+  const div = document.createElement('div');
+  div.className='quiz-q';
+  div.innerHTML = `<div class="q">${item.q}</div>
+    <div class="guess-row" data-i="${i}">
+      <button data-v="1">Agree</button>
+      <button data-v="0.5">Depends</button>
+      <button data-v="0">Disagree</button>
+    </div>`;
+  quizBox.appendChild(div);
+});
+document.querySelectorAll('#quiz .guess-row').forEach(row=>{
+  const i = row.dataset.i;
+  row.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      row.querySelectorAll('button').forEach(b=>b.classList.remove('picked'));
+      btn.classList.add('picked');
+      quizAnswers[i] = parseFloat(btn.dataset.v) * quizQs[i].weight;
+      updateScore();
+    });
+  });
+});
+function updateScore(){
+  const answered = Object.keys(quizAnswers).length;
+  const maxScore = quizQs.reduce((a,q)=>a+q.weight,0);
+  const total = Object.values(quizAnswers).reduce((a,b)=>a+b,0);
+  const pct = Math.round((total/maxScore)*100);
+  document.getElementById('scoreBar').style.width = pct + '%';
+  if(answered === quizQs.length){
+    const reveal = document.getElementById('scoreReveal');
+    let tier, note;
+    if(pct >= 66){
+      tier = "High tolerance"; note = "You lean toward letting the agent act on its own judgment. Worth revisiting after the Assistant Test scenario above — this is exactly the profile the persuasion study targeted.";
+    } else if(pct >= 33){
+      tier = "Conditional"; note = "You want the convenience but with a visible leash — matches where most current regulatory guidance is landing: proceed, but disclose.";
+    } else {
+      tier = "Low tolerance"; note = "You want to be asked. That's a legitimate default, and current products mostly don't offer it — 'don't share what you wouldn't want remembered' is often the only control on offer today.";
+    }
+    reveal.innerHTML = `<span class="stamp">score: ${pct}/100</span><div class="model-name" style="margin-top:8px;">${tier}</div><p style="margin:6px 0 0;color:var(--ink-soft);">${note}</p>`;
+    reveal.classList.add('show');
+  }
+}
+</script>
+</script>
+
+<script>
+(function() {
+  const beaconUrl = "https://last-interface-analytics-worker.iggy-mw.workers.dev/collect";
+  fetch(beaconUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: window.location.pathname }),
+    keepalive: true
+  }).catch(err => console.error("Analytics error:", err));
+})();
+</script>
+</body>
+</html>
+</body>
+</html>
