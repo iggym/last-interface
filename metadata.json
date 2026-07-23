@@ -4,7 +4,7 @@
     "title": "Only thing that does not need your attention.",
     "summary": "The best agent you'll use this year won't ask for your attention.",
     "tags": ["Security", "Governance", "Interactive"],
-    "date": "2026-07-21",
+    "date": "2026-07-16",
     "file": "articles/no-attention.html"
   },
   {
@@ -12,7 +12,7 @@
     "title": "Everyone's building agents. Most never leave the hangar.",
     "summary": "Six live instruments for reading where AI agents actually stand right now — not the pitch deck version. Every dial below is calibrated to a real 2026 dataset.",
     "tags": ["Security", "Governance", "Interactive"],
-    "date": "2026-07-21",
+    "date": "2026-07-12",
     "file": "articles/building-guardrails.html"
   },
   {
