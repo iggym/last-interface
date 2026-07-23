@@ -16,12 +16,12 @@
     "file": "articles/building-guardrails.html"
   },
   {
-    "id": "01-permission-guardrails",
-    "title": "Autonomous Permission Guardrails",
-    "summary": "How human-in-the-loop OAuth scopes and Governance-as-Code prevent rogue agentic API loops while maintaining execution speed.",
-    "tags": ["Security", "Governance", "Interactive"],
+    "id": "01-outcome-owning-agents",
+    "title": "You stop giving steps. You start giving outcomes.",
+    "summary": "-Make sure I'm prepared for tomorrow is not an instruction — it's a target. Click it and watch what an outcome-owning agent decides to do with it.",
+    "tags": ["Security", "Privacy", "Governance", "Interactive"],
     "date": "2026-07-21",
-    "file": "articles/01-permission-guardrails.html"
+    "file": "articles/outcome-owning-agents.html"
   },
   {
     "id": "02-federated-agent-swarms",
