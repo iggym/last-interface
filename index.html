@@ -402,5 +402,18 @@ function render(){
 search.addEventListener('input', render);
 init();
 </script>
+
+<script>
+  (function() {
+    const beaconUrl = "https://last-interface-analytics-worker.iggy-mw.workers.dev/collect";
+    fetch(beaconUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: window.location.pathname }),
+      keepalive: true
+    }).catch(err => console.error("Analytics error:", err));
+  })();
+</script>
+  
 </body>
 </html>
