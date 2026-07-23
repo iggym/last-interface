@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Agent, On Hold For You</title>
+<script>
+  (function() {
+    const beaconUrl = "https://last-interface-analytics-worker.iggy-mw.workers.dev/collect";
+    fetch(beaconUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: window.location.pathname }),
+      keepalive: true
+    }).catch(err => console.error("Analytics error:", err));
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2A33;
+    --paper:#EDEDE3;
+    --paper-dim:#E2E2D4;
+    --teal:#2B4C4F;
+    --teal-deep:#16292B;
+    --amber:#C98A1E;
+    --amber-bright:#E0A234;
+    --red:#A8432F;
+    --line:#c9c7b6;
+    --white:#FBFAF6;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.display{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:700;
+    letter-spacing:-0.01em;
+    color:var(--teal-deep);
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:var(--teal);}
+  .back-link{
+    position:sticky;top:0;z-index:50;
+    display:flex;align-items:center;gap:8px;
+    padding:14px 20px;background:var(--paper);
+    border-bottom:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace;font-size:13px;
+    text-decoration:none;color:var(--teal-deep);
+  }
+  .back-link:hover{color:var(--amber);}
+  .wrap{max-width:760px;margin:0 auto;padding:0 24px;}
+  section{padding:64px 0;}
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;letter-spacing:0.12em;text-transform:uppercase;
+    color:var(--amber);margin-bottom:10px;
+  }
+  p{color:#3a473f;}
+  .lede{font-size:18px;color:#324038;}
+
+  /* HERO */
+  .hero{padding:90px 0 60px;position:relative;overflow:hidden;}
+  .hero h1{font-size:clamp(34px,6vw,58px);line-height:1.03;margin:0 0 20px;}
+  .hero .accent{color:var(--amber);}
+  .hold-bar{
+    display:flex;align-items:center;gap:12px;
+    font-family:'IBM Plex Mono',monospace;font-size:13px;color:var(--teal);
+    background:var(--white);border:1px solid var(--line);
+    padding:10px 16px;border-radius:2px;margin-top:30px;max-width:420px;
+  }
+  .hold-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.4s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
+  .hold-timer{margin-left:auto;font-weight:600;}
+
+  /* CARD / TOOL SHELL */
+  .tool{
+    background:var(--white);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:32px;
+    margin:36px 0;
+    position:relative;
+  }
+  .tool::before{
+    content:attr(data-tag);
+    position:absolute;top:-11px;left:24px;
+    background:var(--teal-deep);color:var(--white);
+    font-family:'IBM Plex Mono',monospace;font-size:11px;
+    letter-spacing:0.08em;text-transform:uppercase;
+    padding:4px 10px;border-radius:2px;
+  }
+  .tool h3{font-size:22px;margin:6px 0 6px;}
+  .tool .sub{font-size:14px;color:#6b7268;margin-bottom:20px;}
+
+  button.opt, select.opt{
+    font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+    background:var(--paper);border:1px solid var(--line);color:var(--ink);
+    padding:10px 16px;border-radius:3px;cursor:pointer;
+    transition:all .15s ease;
+  }
+  button.opt:hover{border-color:var(--teal);background:#e2ece9;}
+  button.opt.selected{background:var(--teal);color:var(--white);border-color:var(--teal);}
+  .row{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;}
+
+  .reveal{
+    display:none;margin-top:20px;padding-top:20px;
+    border-top:1px dashed var(--line);
+  }
+  .reveal.show{display:block;animation:fadeIn .4s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+  .guess-prompt{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;
+    color:var(--teal);background:#e2ece9;padding:10px 14px;
+    border-left:3px solid var(--teal);margin-bottom:16px;
+  }
+
+  .verdict{
+    font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:19px;
+    color:var(--teal-deep);
+  }
+  .gap-note{font-size:13px;color:var(--red);font-style:italic;margin-top:6px;}
+
+  /* RECEIPT (signature element) */
+  .receipt{
+    font-family:'IBM Plex Mono',monospace;font-size:13px;
+    background:var(--white);color:var(--teal-deep);
+    max-width:340px;margin:18px auto 0;
+    padding:18px 20px 22px;
+    background-image:
+      linear-gradient(45deg, var(--paper) 25%, transparent 25%),
+      linear-gradient(-45deg, var(--paper) 25%, transparent 25%);
+    background-size:14px 14px;
+    background-position:0 100%;
+    background-repeat:repeat-x;
+    background-color:var(--white);
+    border:1px solid var(--line);border-bottom:none;
+    box-shadow:0 6px 14px rgba(27,42,51,0.08);
+  }
+  .receipt .rline{display:flex;justify-content:space-between;padding:3px 0;}
+  .receipt .rdiv{border-top:1px dashed var(--line);margin:8px 0;}
+  .receipt .rtotal{font-weight:600;font-size:15px;}
+  .receipt .rhead{text-align:center;letter-spacing:0.1em;text-transform:uppercase;font-size:11px;color:#6b7268;margin-bottom:8px;}
+
+  /* MODEL CALLOUT */
+  .model-tag{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--teal-deep);color:var(--amber-bright);
+    font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;
+    padding:4px 10px;border-radius:2px;letter-spacing:0.03em;
+  }
+  .model-block{
+    background:var(--teal-deep);color:var(--white);
+    padding:22px 26px;border-radius:4px;margin:30px 0;
+  }
+  .model-block h3{color:var(--amber-bright);margin:0 0 8px;font-size:20px;}
+  .model-block p{color:#d7ddd6;margin:0;font-size:15px;}
+
+  /* comparison */
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;}
+  @media (max-width:560px){.compare{grid-template-columns:1fr;}}
+  .compare .col{background:var(--paper-dim);padding:16px;border-radius:3px;border:1px solid var(--line);}
+  .compare .col h4{margin:0 0 8px;font-size:14px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:0.05em;color:var(--teal);}
+
+  /* scenario brancher */
+  .branch-path{display:flex;flex-direction:column;gap:8px;margin-top:14px;}
+  .branch-node{
+    padding:12px 16px;background:var(--paper-dim);border-left:3px solid var(--line);
+    font-size:14px;
+  }
+  .branch-node.you{border-left-color:var(--teal);}
+  .branch-node.them{border-left-color:var(--red);}
+  .branch-node .who{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;color:#6b7268;display:block;margin-bottom:2px;}
+
+  /* checklist */
+  .check-item{
+    display:flex;gap:12px;align-items:flex-start;
+    padding:14px 0;border-bottom:1px solid var(--line);
+  }
+  .check-item:last-child{border-bottom:none;}
+  .check-item input{margin-top:4px;width:16px;height:16px;accent-color:var(--teal);}
+  .check-item label{font-size:15px;cursor:pointer;}
+  .check-note{font-size:13px;color:#6b7268;margin-top:4px;display:none;}
+  .check-note.show{display:block;}
+  .scan-result{
+    margin-top:18px;padding:16px;border-radius:3px;
+    background:var(--paper-dim);font-family:'IBM Plex Mono',monospace;font-size:14px;
+  }
+
+  /* facts strip */
+  .facts-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--line);margin:36px 0;border:1px solid var(--line);}
+  @media (max-width:560px){.facts-strip{grid-template-columns:1fr;}}
+  .fact{background:var(--white);padding:18px;}
+  .fact .num{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:26px;color:var(--amber);}
+  .fact .lbl{font-size:12px;color:#6b7268;margin-top:4px;}
+
+  .timeline{margin-top:20px;}
+  .tl-step{
+    display:grid;grid-template-columns:90px 1fr;gap:16px;
+    padding:16px 0;border-bottom:1px solid var(--line);
+  }
+  .tl-step:last-child{border-bottom:none;}
+  .tl-date{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--amber);padding-top:2px;}
+  .tl-content{cursor:pointer;}
+  .tl-guess{font-size:14px;color:var(--teal);font-style:italic;}
+  .tl-real{display:none;margin-top:6px;font-size:14px;}
+  .tl-real.show{display:block;}
+
+  footer{padding:50px 0 90px;border-top:1px solid var(--line);margin-top:40px;}
+  footer p{font-size:13px;color:#6b7268;}
+
+  .slider-row{display:flex;flex-direction:column;gap:6px;margin:16px 0;}
+  input[type=range]{accent-color:var(--teal);width:100%;}
+  .slider-val{font-family:'IBM Plex Mono',monospace;font-weight:600;color:var(--teal-deep);}
+</style>
+</head>
+<body>
+
+<a class="back-link" href="../index.html">&larr; back to catalog</a>
+
+<div class="wrap">
+
+  <section class="hero">
+    <div class="eyebrow">field notes on the agentic economy</div>
+    <h1>Your agent is on hold.<br>The question is <span class="accent">who gets paid for the wait.</span></h1>
+    <p class="lede">Consumer AI agents now cancel your gym membership, argue with Comcast, and file the refund claim you kept meaning to. That part's real. What's less obvious is what happens once the company on the other end of the line has an agent too.</p>
+    <div class="hold-bar">
+      <div class="hold-dot"></div>
+      <span>Your call is important to us&hellip;</span>
+      <span class="hold-timer" id="heroTimer">00:00</span>
+    </div>
+  </section>
+
+  <section>
+    <p>Here's the pitch you've heard: an agent sits on hold so you don't have to, argues with a retention rep, and gets you a better deal. Companies built entire products on it &mdash; Pine, Rocket Money, DoNotPay, Kudos &mdash; and the results are <a href="https://www.businesswire.com/news/home/20260114758958/en" target="_blank" rel="noopener">not nothing</a>: one vendor's own data shows users saving hundreds of dollars a year canceling a single forgotten cable add-on.</p>
+    <p>But almost every write-up stops at "does the agent win the call." That's the wrong question to be asking by 2026. Below are six small tools built around the numbers behind this industry &mdash; and the reframe that the people building these agents actually operate on, which has very little to do with how persuasive the AI sounds on the phone.</p>
+
+    <div class="facts-strip">
+      <div class="fact"><div class="num mono">35&ndash;65%</div><div class="lbl">of your savings, kept as commission by a typical bill-negotiation agent</div></div>
+      <div class="fact"><div class="num mono">$193K</div><div class="lbl">FTC penalty against DoNotPay for overstating what its agent could actually do</div></div>
+      <div class="fact"><div class="num mono">270 min</div><div class="lbl">average time one vendor claims its agent saves a user, per task</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 1: Guess the Cut -->
+  <section>
+    <div class="eyebrow">tool 01 &middot; simulator</div>
+    <h2>Guess the Cut</h2>
+    <p>Every negotiation agent presents itself as working for you. Most of them are actually paid a percentage of what they win &mdash; which means their incentive is aligned with getting <em>a</em> discount, not necessarily the discount that's best for you long-term (a 5-year lock-in counts as a "win").</p>
+
+    <div class="tool" data-tag="try it">
+      <h3>Pick a bill and a service. Guess your real take-home.</h3>
+      <div class="sub">Then see what the fee structures actually are.</div>
+
+      <div class="guess-prompt">Before you pick a service: if an agent saves you $240/year on a bill, what % do you think you actually keep?</div>
+
+      <div class="row" id="cutGuessRow">
+        <button class="opt" data-guess="90">Almost all of it (~90%)</button>
+        <button class="opt" data-guess="65">Most of it (~65%)</button>
+        <button class="opt" data-guess="40">Less than half (~40%)</button>
+      </div>
+
+      <div class="row" id="cutServiceRow" style="margin-top:22px;">
+        <button class="opt" data-fee="50" data-name="Rocket Money">Rocket Money</button>
+        <button class="opt" data-fee="40" data-name="Billshark">Billshark</button>
+        <button class="opt" data-fee="50" data-name="BillCutterz">BillCutterz</button>
+        <button class="opt" data-fee="0" data-name="Experian / BillFixers">Experian (BillFixers)</button>
+      </div>
+
+      <div class="reveal" id="cutReveal">
+        <div class="receipt" id="cutReceipt"></div>
+        <div class="gap-note" id="cutGapNote"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="model-block">
+    <h3>The Cut</h3>
+    <p>Named because it's the first fact that gets buried under "we saved you money" marketing. Most negotiation agents don't charge you a subscription &mdash; they take a slice of the savings, typically <a href="https://trends.vc/bill-negotiation-agents-price-locks-playbook-moats-loyalty-penalty/" target="_blank" rel="noopener">35&ndash;60% in the first year</a>. The agent's win and your win are correlated but not identical. Every tool below eventually runs into The Cut in some form.</p>
+  </div>
+
+  <!-- TOOL 2: Hold Music Arbitrage -->
+  <section>
+    <div class="eyebrow">tool 02 &middot; calculator</div>
+    <h2>Hold Music Arbitrage</h2>
+    <p>The honest version of the value prop isn't "the agent negotiates better than you." It's simpler: your time has a price, hold music doesn't, and an agent can sit in the queue at $0/hour while you do something else. That's the actual arbitrage. The question is whether the fee it charges is smaller than the value of the time it bought back.</p>
+
+    <div class="tool" data-tag="try it">
+      <h3>What's an hour of your time worth, roughly?</h3>
+      <div class="sub">We'll use Pine's own reported average &mdash; 270 minutes saved per task &mdash; against a typical negotiation fee.</div>
+
+      <div class="guess-prompt">Guess first: for a $240/year bill win, does the value of your saved time beat the commission the agent charges?</div>
+      <div class="row" id="arbGuessRow">
+        <button class="opt" data-guess="yes">Time saved wins</button>
+        <button class="opt" data-guess="no">Commission wins</button>
+      </div>
+
+      <div class="slider-row">
+        <label class="mono">Your hourly time value: <span class="slider-val" id="hourlyVal">$25/hr</span></label>
+        <input type="range" id="hourlySlider" min="10" max="150" value="25" step="5">
+      </div>
+
+      <div class="reveal" id="arbReveal">
+        <div class="compare">
+          <div class="col">
+            <h4>Time bought back</h4>
+            <p style="margin:0;font-size:15px;">270 minutes (4.5 hrs) of hold time &times; your hourly value = <span class="mono" id="arbTimeValue">$0</span></p>
+          </div>
+          <div class="col">
+            <h4>Commission on a $240 win</h4>
+            <p style="margin:0;font-size:15px;">At a 50% cut, the agent keeps <span class="mono">$120</span> of your savings.</p>
+          </div>
+        </div>
+        <div class="reveal" style="border-top:none;padding-top:14px;" id="arbVerdictBox">
+          <div class="verdict" id="arbVerdict"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL 3: Bot vs Bot scenario brancher -->
+  <section>
+    <div class="eyebrow">tool 03 &middot; scenario brancher</div>
+    <h2>Bot vs. Bot</h2>
+    <p>Here's the part most coverage misses: companies aren't sitting still. The same infrastructure that lets your agent detect a forgotten subscription lets a company score your <em>churn risk</em> and intervene before you ever open the cancellation flow. Increasingly, your agent isn't negotiating with a human. It's negotiating with theirs.</p>
+
+    <div class="tool" data-tag="try it">
+      <h3>Send your agent to cancel a streaming subscription.</h3>
+      <div class="sub">Pick your agent's opening move, then see how a retention agent on the other side responds.</div>
+
+      <div class="guess-prompt">Before you choose: do you think the company's system reacts to your agent differently than it would to you calling yourself?</div>
+      <div class="row" id="botGuessRow">
+        <button class="opt" data-guess="yes">Yes, it treats agents differently</button>
+        <button class="opt" data-guess="no">No, same either way</button>
+      </div>
+
+      <div class="row" id="botMoveRow" style="margin-top:22px;">
+        <button class="opt" data-move="direct">Cancel immediately, no small talk</button>
+        <button class="opt" data-move="reason">State a reason ("too expensive")</button>
+      </div>
+
+      <div class="reveal" id="botReveal">
+        <div class="branch-path" id="botPath"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="model-block">
+    <h3>Bot vs. Bot</h3>
+    <p>The mental shift practitioners in this space have already made, and most newcomers haven't: this isn't a story about whether AI can out-negotiate a human rep. Retention teams are building their own agents &mdash; scoring login frequency, feature use, and billing timing to flag you as a churn risk and intervene <em>before</em> you cancel. The fight increasingly happens between two systems, at machine speed, with the human mostly watching the outcome.</p>
+  </div>
+
+  <!-- TOOL 4: Blind spot scanner -->
+  <section>
+    <div class="eyebrow">tool 04 &middot; blind-spot scanner</div>
+    <h2>Who's Actually Advocating for You?</h2>
+    <p>Before handing an agent your accounts, it's worth checking which assumptions you're making without noticing. Check the ones you'd have assumed were true &mdash; then see what the record actually shows.</p>
+
+    <div class="tool" data-tag="try it">
+      <h3>Tick the assumptions you'd normally make about a "consumer AI agent"</h3>
+      <div id="scanList"></div>
+      <div class="scan-result" id="scanResult" style="display:none;"></div>
+    </div>
+  </section>
+
+  <!-- TOOL 5: Diagnostic score -->
+  <section>
+    <div class="eyebrow">tool 05 &middot; diagnostic</div>
+    <h2>Is Your Bill Actually Negotiable?</h2>
+    <p>Not every bill is worth sending an agent after. One vendor's own "Consumer Friction Index" &mdash; the companies its users most often deploy it against &mdash; is a decent proxy for which categories have real negotiation slack built in.</p>
+
+    <div class="tool" data-tag="try it">
+      <h3>What kind of bill is it?</h3>
+      <div class="guess-prompt">Guess first: out of cable/internet, mobile, and streaming, which gets negotiated down most often?</div>
+      <div class="row" id="diagGuessRow">
+        <button class="opt" data-guess="cable">Cable / internet</button>
+        <button class="opt" data-guess="mobile">Mobile carrier</button>
+        <button class="opt" data-guess="streaming">Streaming</button>
+      </div>
+
+      <div class="row" id="diagPickRow" style="margin-top:22px;">
+        <button class="opt" data-bill="cable">Cable / internet (Xfinity, Spectrum)</button>
+        <button class="opt" data-bill="mobile">Mobile (AT&T, Verizon, T-Mobile)</button>
+        <button class="opt" data-bill="bank">Bank / credit (Chase)</button>
+        <button class="opt" data-bill="insurance">Insurance (GEICO, Progressive)</button>
+        <button class="opt" data-bill="streaming">Streaming (Netflix)</button>
+      </div>
+
+      <div class="reveal" id="diagReveal">
+        <div class="verdict" id="diagVerdict"></div>
+        <p id="diagText" style="margin-top:8px;font-size:14px;"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL 6: Counterfactual timeline -->
+  <section>
+    <div class="eyebrow">tool 06 &middot; timeline explorer</div>
+    <h2>Where the Trust Broke</h2>
+    <p>The clearest cautionary case in the industry is DoNotPay, which marketed itself as the "world's first robot lawyer." Click each step and guess what happened next before revealing it.</p>
+
+    <div class="tool" data-tag="try it">
+      <h3>The DoNotPay timeline</h3>
+      <div class="sub">Click a step to reveal what actually happened.</div>
+      <div class="timeline" id="timelineList"></div>
+    </div>
+  </section>
+
+  <div class="model-block">
+    <h3>The Cut, revisited</h3>
+    <p>DoNotPay's problem wasn't that its agent failed sometimes &mdash; every agent does. It's that the company sold certainty ("substitute for a human lawyer") it hadn't tested, while quietly keeping The Cut on outcomes it couldn't actually guarantee. The FTC's $193,000 order didn't punish automation. It punished claiming more capability than the agent had earned.</p>
+  </div>
+
+  <section>
+    <h2>The reframe, stated plainly</h2>
+    <p>A smart newcomer asks: <em>"is the agent good enough to win the call?"</em> That's the wrong constraint. Practitioners in this space are increasingly asking a different question: <em>once both sides of a transaction have an agent, who captures the value the negotiation creates</em> &mdash; the platform taking The Cut, the company's retention system playing Bot vs. Bot, or you? Capability was the bottleneck in 2023. By 2026 the bottleneck is closer to market structure: fee splits, data access, and which side's agent has the better model of the other.</p>
+    <p style="font-size:13px;color:#6b7268;">Sources consulted include Pine's Consumer Friction Index, Trends.vc's bill-negotiation market map, industry coverage of agentic subscription commerce, and the FTC's public record on DoNotPay's 2025 settlement.</p>
+  </section>
+
+  <footer>
+    <p>Built as a self-contained artifact. Figures cited are drawn from vendor disclosures and public reporting as of mid-2026 and may shift as this market matures &mdash; commission rates and enforcement actions in particular change often.</p>
+  </footer>
+
+</div>
+
+<script>
+// ---------- Hero hold timer ----------
+(function(){
+  let s=0;
+  const el=document.getElementById('heroTimer');
+  setInterval(()=>{
+    s++;
+    const m=String(Math.floor(s/60)).padStart(2,'0');
+    const sec=String(s%60).padStart(2,'0');
+    el.textContent=`${m}:${sec}`;
+  },1000);
+})();
+
+// ---------- helper for single-select button rows ----------
+function wireSingleSelect(rowId, attr, onPick){
+  const row=document.getElementById(rowId);
+  row.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      row.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      onPick(btn.dataset[attr], btn);
+    });
+  });
+}
+
+// ---------- TOOL 1: Guess the Cut ----------
+let cutGuess=null;
+wireSingleSelect('cutGuessRow','guess',(val)=>{cutGuess=val;});
+
+wireSingleSelect('cutServiceRow','fee',(fee,btn)=>{
+  const name=btn.dataset.name;
+  const win=240;
+  const feePct=parseInt(fee,10);
+  const kept=win*(1-feePct/100);
+  const cutAmt=win-kept;
+  document.getElementById('cutReceipt').innerHTML=`
+    <div class="rhead">${name} &mdash; annual bill win</div>
+    <div class="rline"><span>Amount saved by agent</span><span>$${win}.00</span></div>
+    <div class="rline"><span>Commission (${feePct}%)</span><span>&minus;$${cutAmt.toFixed(2)}</span></div>
+    <div class="rdiv"></div>
+    <div class="rline rtotal"><span>You keep</span><span>$${kept.toFixed(2)}</span></div>
+  `;
+  document.getElementById('cutReveal').classList.add('show');
+  const keptPct=100-feePct;
+  let note='';
+  if(cutGuess){
+    const guessPct=parseInt(cutGuess,10);
+    const diff=Math.abs(guessPct-keptPct);
+    if(diff>=20){
+      note=`You guessed you'd keep ~${guessPct}%. ${name} actually leaves you ${keptPct}% &mdash; that's a ${diff}-point gap. This is The Cut most marketing pages don't put in the hero section.`;
+    } else {
+      note=`You guessed ~${guessPct}%, actual is ${keptPct}%. Close &mdash; you already had The Cut's rough shape in mind.`;
+    }
+  }
+  document.getElementById('cutGapNote').textContent=note;
+});
+
+// ---------- TOOL 2: Hold Music Arbitrage ----------
+let arbGuess=null;
+wireSingleSelect('arbGuessRow','guess',(val)=>{arbGuess=val; renderArb();});
+const hourlySlider=document.getElementById('hourlySlider');
+hourlySlider.addEventListener('input', renderArb);
+function renderArb(){
+  const hourly=parseInt(hourlySlider.value,10);
+  document.getElementById('hourlyVal').textContent=`$${hourly}/hr`;
+  const hours=270/60;
+  const timeValue=hourly*hours;
+  document.getElementById('arbTimeValue').textContent=`$${timeValue.toFixed(2)}`;
+  if(arbGuess){
+    document.getElementById('arbReveal').classList.add('show');
+    const commission=120;
+    const timeWins=timeValue>commission;
+    const guessedYes=arbGuess==='yes';
+    let msg='';
+    if(timeWins){
+      msg=`At $${hourly}/hr, your saved time is worth $${timeValue.toFixed(2)} &mdash; more than the $120 commission. `;
+    } else {
+      msg=`At $${hourly}/hr, your saved time is worth only $${timeValue.toFixed(2)} &mdash; less than the $120 commission. `;
+    }
+    if(timeWins===guessedYes){
+      msg+="That matches your guess.";
+    } else {
+      msg+="That's the opposite of what you guessed &mdash; the crossover point is closer to $27/hr than most people assume.";
+    }
+    document.getElementById('arbVerdict').textContent=msg;
+  }
+}
+
+// ---------- TOOL 3: Bot vs Bot ----------
+let botGuess=null;
+wireSingleSelect('botGuessRow','guess',(val)=>{botGuess=val;});
+wireSingleSelect('botMoveRow','move',(move)=>{
+  const path=document.getElementById('botPath');
+  let steps=[];
+  if(move==='direct'){
+    steps=[
+      {who:'your agent', cls:'you', text:'Requests cancellation, no stated reason.'},
+      {who:'their system', cls:'them', text:'Churn-risk score flags the account; billing-proximity signal trips a retention rule before a human ever sees the ticket.'},
+      {who:'their system', cls:'them', text:'Auto-offers a 3-month discount to interrupt the flow &mdash; the same move it would make for a human caller.'},
+      {who:'your agent', cls:'you', text:'Declines the offer per your standing instructions and re-requests cancellation. Most flows require this second pass.'}
+    ];
+  } else {
+    steps=[
+      {who:'your agent', cls:'you', text:'States "too expensive" as the reason for canceling.'},
+      {who:'their system', cls:'them', text:'"Price" is the single most retention-treatable reason in these systems &mdash; it routes straight to a save-offer branch, often a better one than the silent-cancel path gets.'},
+      {who:'their system', cls:'them', text:'Offers a locked promotional rate for 12 months, sometimes below the original teaser price.'},
+      {who:'your agent', cls:'you', text:'Now has to decide: take the save (delay the goal) or push through cancellation. Either way, the "reason" you gave shaped which offer showed up.'}
+    ];
+  }
+  path.innerHTML = steps.map(s=>`<div class="branch-node ${s.cls}"><span class="who">${s.who}</span>${s.text}</div>`).join('');
+  path.innerHTML += `<div class="branch-node you" style="margin-top:6px;border-left-style:dashed;"><span class="who">what if you'd chosen differently?</span>Try the other opening move above &mdash; the branch reopens and the retention offer changes shape entirely.</div>`;
+  document.getElementById('botReveal').classList.add('show');
+  if(botGuess==='no'){
+    path.innerHTML = `<div class="gap-note" style="margin-bottom:10px;">You guessed the system treats agents the same as a human caller &mdash; the reason you state below still changes the offer path, whether it's you or your agent saying it.</div>` + path.innerHTML;
+  }
+});
+
+// ---------- TOOL 4: Blind spot scanner ----------
+const scanItems=[
+  {label:"The agent is legally required to act in my financial best interest.", note:"Not generally true. Most operate as a product you subscribe to or pay commission on &mdash; not a fiduciary. DoNotPay's FTC settlement centered on overstating what its agent could substitute for."},
+  {label:"A 'free' agent has no financial stake in the outcome.", note:"Free tiers commonly monetize through commission on negotiated savings (see The Cut) &mdash; the incentive is a win, not necessarily your best available option."},
+  {label:"The company on the other end treats an AI agent's request identically to a human's.", note:"Increasingly false. Retention systems are built to detect and score cancellation intent regardless of who's asking, and some route agent-flagged requests differently."},
+  {label:"Giving the agent account access is a one-time, contained event.", note:"Security researchers flag ongoing PII retention and third-party data-sharing as an under-examined risk once an agent has standing account access, not just one-off task access."},
+  {label:"If the agent gets it wrong, the harm is easy to undo.", note:"DoNotPay's complaint cited real-world consequences like missed legal deadlines from an agent that hadn't been tested against the standard it claimed to meet."}
+];
+(function(){
+  const list=document.getElementById('scanList');
+  scanItems.forEach((item,i)=>{
+    const div=document.createElement('div');
+    div.className='check-item';
+    div.innerHTML=`
+      <input type="checkbox" id="chk${i}">
+      <div style="flex:1;">
+        <label for="chk${i}">${item.label}</label>
+        <div class="check-note" id="note${i}">${item.note}</div>
+      </div>`;
+    list.appendChild(div);
+    div.querySelector('input').addEventListener('change',(e)=>{
+      document.getElementById(`note${i}`).classList.toggle('show', e.target.checked);
+      updateScanResult();
+    });
+  });
+})();
+function updateScanResult(){
+  const checked=scanItems.filter((_,i)=>document.getElementById(`chk${i}`).checked).length;
+  const box=document.getElementById('scanResult');
+  if(checked===0){box.style.display='none';return;}
+  box.style.display='block';
+  box.textContent = `${checked} of 5 assumptions checked. Each one you ticked was, historically, the assumption that turned out to be the gap between what an agent was marketed as and what the record shows it actually did.`;
+}
+
+// ---------- TOOL 5: Diagnostic ----------
+let diagGuess=null;
+wireSingleSelect('diagGuessRow','guess',(v)=>{diagGuess=v;});
+const diagData={
+  cable:{tier:'High negotiability', text:'Cable/internet tops the friction index by a wide margin &mdash; these bills carry the most promotional-rate churn and the most retention-offer slack of any category.'},
+  mobile:{tier:'High negotiability', text:'Mobile carriers show up second most often &mdash; loyalty and bundle discounts are frequently available but rarely offered proactively.'},
+  bank:{tier:'Moderate', text:'Banking fees (overdraft, monthly maintenance) are negotiable but usually require a different lever &mdash; account tenure or minimum balance &mdash; rather than a "competitor offer" script.'},
+  insurance:{tier:'Moderate', text:'Insurance rates move with bundling and shopping renewal quotes, but true negotiation (vs. re-shopping) is limited.'},
+  streaming:{tier:'Low negotiability', text:'Streaming services rarely negotiate price &mdash; the standard move is cancel-and-resubscribe during a promo window, not negotiation at all.'}
+};
+wireSingleSelect('diagPickRow','bill',(bill)=>{
+  const d=diagData[bill];
+  document.getElementById('diagVerdict').textContent=d.tier;
+  document.getElementById('diagText').textContent=d.text;
+  document.getElementById('diagReveal').classList.add('show');
+  if(diagGuess){
+    const correct = (diagGuess==='cable');
+    const extra = correct
+      ? " Your guess (cable/internet) matches what the friction data actually shows tops the list."
+      : " For reference: cable/internet tops the friction index most vendors report, ahead of mobile and well ahead of streaming.";
+    document.getElementById('diagText').textContent += extra;
+  }
+});
+
+// ---------- TOOL 6: Timeline ----------
+const timelineData=[
+  {date:'2015', label:'DoNotPay launches', guess:'What do you think the pitch was?', real:'Marketed narrowly as a parking-ticket appeal bot &mdash; a small, testable claim.'},
+  {date:'2021', label:'"World\'s first robot lawyer"', guess:'Guess: does the marketing claim grow or shrink over time?', real:'Positioning expands to claim the service "could substitute for the expertise of a human lawyer" &mdash; a much bigger, harder-to-test claim.'},
+  {date:'2024', label:'FTC opens the case', guess:'Guess: what specifically does the FTC allege?', real:'The complaint alleges DoNotPay never tested whether its chatbot\'s output matched human-lawyer quality, and never employed attorneys, despite the marketing.'},
+  {date:'2025', label:'Final order', guess:'Guess: what does the settlement actually require?', real:'$193,000 in consumer relief, mandatory notice to 2021&ndash;2023 subscribers, and a bar on claiming the service substitutes for a professional without evidence.'}
+];
+(function(){
+  const list=document.getElementById('timelineList');
+  timelineData.forEach((step,i)=>{
+    const div=document.createElement('div');
+    div.className='tl-step';
+    div.innerHTML=`
+      <div class="tl-date">${step.date}</div>
+      <div class="tl-content" data-i="${i}">
+        <div style="font-weight:600;">${step.label}</div>
+        <div class="tl-guess">${step.guess} (click to reveal)</div>
+        <div class="tl-real" id="tlreal${i}">${step.real}</div>
+      </div>`;
+    list.appendChild(div);
+  });
+  list.querySelectorAll('.tl-content').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const i=el.dataset.i;
+      document.getElementById(`tlreal${i}`).classList.toggle('show');
+    });
+  });
+})();
+</script>
+
+</body>
+</html>
