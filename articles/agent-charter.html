@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Charter of a Personal Institution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#EDE7D9;
+    --paper-2:#E4DCC7;
+    --ink:#1B2430;
+    --ink-soft:#3C4658;
+    --brass:#8A6D3B;
+    --brass-bright:#A9853F;
+    --oxblood:#6B1F1F;
+    --rule:#B8AD94;
+    --paper-dark:#D9D0B8;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Source Serif 4', serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--brass); color:var(--paper);}
+
+  a.back{
+    position:sticky; top:0; z-index:50;
+    display:inline-block;
+    margin:0; padding:10px 22px;
+    background:var(--paper); border-bottom:1px solid var(--rule);
+    color:var(--ink-soft); text-decoration:none;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.06em;
+    text-transform:uppercase;
+    width:100%;
+  }
+  a.back:hover{color:var(--oxblood);}
+
+  .wrap{max-width:760px; margin:0 auto; padding:0 24px;}
+  @media (max-width:600px){.wrap{padding:0 16px;}}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    padding:64px 0 40px;
+    border-bottom:2px solid var(--ink);
+    text-align:center;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; letter-spacing:0.18em; text-transform:uppercase;
+    color:var(--brass); margin-bottom:18px;
+  }
+  h1.title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:clamp(34px, 6vw, 58px);
+    line-height:1.05;
+    margin:0 0 20px;
+    letter-spacing:-0.01em;
+  }
+  .hero p.lede{
+    font-size:18px; color:var(--ink-soft); max-width:560px; margin:0 auto 34px;
+  }
+  .seal{
+    width:150px; height:150px; margin:0 auto 8px;
+    border-radius:50%;
+    border:2px solid var(--brass);
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    opacity:0; transform:scale(0.6) rotate(-8deg);
+    transition:opacity 900ms ease, transform 900ms cubic-bezier(.2,.9,.25,1);
+  }
+  .seal.stamped{opacity:1; transform:scale(1) rotate(-8deg);}
+  .seal::before{
+    content:'';
+    position:absolute; inset:8px; border:1px dashed var(--brass);
+    border-radius:50%;
+  }
+  .seal-text{
+    font-family:'IBM Plex Mono', monospace; font-size:9px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--brass); text-align:center; line-height:1.5;
+  }
+  .seal-text b{display:block; font-family:'Fraunces',serif; font-size:15px; letter-spacing:0; color:var(--ink); margin:2px 0;}
+
+  /* ---------- ARTICLE STRUCTURE ---------- */
+  .article{
+    padding:56px 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .article:last-of-type{border-bottom:none;}
+  .art-num{
+    font-family:'IBM Plex Mono', monospace; font-size:12px; letter-spacing:0.16em;
+    color:var(--brass); text-transform:uppercase; margin-bottom:10px;
+  }
+  h2{
+    font-family:'Fraunces', serif; font-weight:600; font-size:clamp(24px,4vw,32px);
+    margin:0 0 16px; letter-spacing:-0.01em;
+  }
+  h3{
+    font-family:'Fraunces', serif; font-weight:600; font-size:19px; margin:0 0 10px;
+  }
+  p{margin:0 0 16px; font-size:16.5px; color:var(--ink-soft);}
+  p strong{color:var(--ink);}
+  .model-name{
+    color:var(--oxblood); font-weight:600; font-style:italic; font-family:'Source Serif 4', serif;
+  }
+
+  .fact-strip{
+    display:flex; gap:10px; overflow-x:auto; padding:4px 0 14px; margin-bottom:8px;
+    scrollbar-width:thin;
+  }
+  .fact-chip{
+    flex:0 0 auto; font-family:'IBM Plex Mono', monospace; font-size:11.5px;
+    background:var(--paper-2); border:1px solid var(--rule); border-radius:3px;
+    padding:8px 12px; color:var(--ink-soft); max-width:200px;
+  }
+
+  /* ---------- GENERIC TOOL SHELL ---------- */
+  .tool{
+    background:var(--paper-2);
+    border:1px solid var(--rule);
+    border-radius:4px;
+    padding:28px 26px;
+    margin:22px 0 8px;
+  }
+  @media (max-width:600px){.tool{padding:20px 16px;}}
+  .tool-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--brass); margin-bottom:6px;
+  }
+  .tool h3{margin-bottom:14px;}
+  .predict-row{
+    display:flex; gap:10px; flex-wrap:wrap; margin:14px 0 18px;
+  }
+  button{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:0.03em;
+    background:var(--paper); color:var(--ink); border:1px solid var(--ink);
+    border-radius:3px; padding:9px 16px; cursor:pointer;
+    transition:background 150ms ease, color 150ms ease;
+  }
+  button:hover{background:var(--ink); color:var(--paper);}
+  button.primary{background:var(--brass); border-color:var(--brass); color:var(--paper);}
+  button.primary:hover{background:var(--brass-bright); border-color:var(--brass-bright);}
+  button:disabled{opacity:0.4; cursor:not-allowed;}
+  button.chosen{background:var(--ink); color:var(--paper);}
+
+  .reveal{
+    margin-top:16px; padding:16px 18px; border-left:3px solid var(--oxblood);
+    background:var(--paper); border-radius:0 3px 3px 0;
+    display:none;
+  }
+  .reveal.show{display:block; animation:fadeIn 400ms ease;}
+  @keyframes fadeIn{from{opacity:0; transform:translateY(-4px);} to{opacity:1; transform:translateY(0);}}
+  .reveal .verdict{font-family:'Fraunces',serif; font-weight:600; font-size:17px; margin-bottom:6px;}
+  .gap-note{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--brass); margin-top:8px;}
+
+  input[type=range]{width:100%; accent-color:var(--brass); margin:10px 0;}
+  .slider-row{margin-bottom:18px;}
+  .slider-label{display:flex; justify-content:space-between; font-family:'IBM Plex Mono', monospace; font-size:12.5px; color:var(--ink-soft);}
+  .slider-val{color:var(--ink); font-weight:600;}
+
+  /* diagnostic */
+  .q{margin-bottom:16px;}
+  .q p{margin-bottom:8px; font-weight:600; color:var(--ink); font-size:15px; font-family:'Source Serif 4',serif;}
+  .opts{display:flex; gap:8px; flex-wrap:wrap;}
+  .score-meter{
+    height:10px; background:var(--paper-dark); border-radius:5px; overflow:hidden; margin:14px 0 6px;
+  }
+  .score-fill{height:100%; width:0%; background:var(--oxblood); transition:width 700ms ease;}
+
+  /* comparison */
+  .compare{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:10px;}
+  @media (max-width:560px){.compare{grid-template-columns:1fr;}}
+  .compare .col{background:var(--paper); border:1px solid var(--rule); border-radius:3px; padding:16px;}
+  .compare .col h4{font-family:'Fraunces',serif; font-size:15px; margin:0 0 10px; color:var(--brass);}
+  .compare ul{margin:0; padding-left:18px; font-size:14px; color:var(--ink-soft);}
+  .compare li{margin-bottom:8px;}
+
+  /* scanner checklist */
+  .scan-item{
+    border:1px solid var(--rule); border-radius:3px; padding:14px 16px; margin-bottom:10px; background:var(--paper);
+  }
+  .scan-item .scenario{font-weight:600; color:var(--ink); margin-bottom:8px; font-size:15px;}
+
+  /* branch scenario */
+  .branch-step{display:none;}
+  .branch-step.active{display:block; animation:fadeIn 400ms ease;}
+  .branch-path{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass); margin-bottom:10px;}
+
+  /* certificate builder (recurring signature element) */
+  .cert{
+    border:1.5px solid var(--ink); border-radius:4px; padding:22px 24px; margin-top:18px;
+    background:repeating-linear-gradient(var(--paper) 0px, var(--paper) 27px, var(--paper-dark) 28px);
+    position:relative;
+  }
+  .cert-row{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; font-family:'IBM Plex Mono',monospace; font-size:13px;}
+  .cert-row .cert-label{color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.06em; font-size:11px;}
+  .cert-row .cert-val{color:var(--oxblood); font-weight:600;}
+  .cert-title{font-family:'Fraunces',serif; font-weight:600; font-size:16px; margin-bottom:14px; text-align:center; letter-spacing:0.02em;}
+
+  footer{
+    padding:48px 0 80px; text-align:center;
+    font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--ink-soft);
+  }
+  .callback{
+    display:inline-block; margin-top:4px; font-size:11px; color:var(--brass);
+    border:1px solid var(--brass); border-radius:20px; padding:2px 10px; font-family:'IBM Plex Mono',monospace;
+  }
+</style>
+</head>
+<body>
+
+<a class="back" href="../index.html">&larr; Back to catalog</a>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="eyebrow">Instrument of Incorporation &middot; Est. 2026</div>
+    <h1 class="title">You Don't Use an Agent.<br>You Charter One.</h1>
+    <p class="lede">Consumers still picture a chatbot they open and prompt. What's actually being built is a persistent legal-and-economic entity — a family office of one, sitting between you and every market and bureaucracy you touch. Scroll to see what that charter would actually have to say.</p>
+    <div class="seal" id="heroSeal">
+      <div class="seal-text">Personal<br><b>Institution</b><br>No. 000001</div>
+    </div>
+  </section>
+
+  <!-- ARTICLE I: THE SHIFT -->
+  <section class="article">
+    <div class="art-num">Article I</div>
+    <h2>The Entity, Not the Errand</h2>
+    <p>Right now, "using an agent" mostly means opening a window and typing a request. But the infrastructure being laid down in 2026 points somewhere else entirely: <strong>agents with standing accounts, spending limits, transaction histories and reputational records</strong> that outlive any one conversation.</p>
+    <div class="fact-strip">
+      <div class="fact-chip">Gartner: 30% of enterprises will run agents that act independently &amp; trigger transactions by 2026</div>
+      <div class="fact-chip">Moltbook: 770,000+ registered AI agents; ~90,704 active in a 3-week window, building reputational capital</div>
+      <div class="fact-chip">Visa wired its network directly into ChatGPT on June 10, 2026 for agent-initiated purchases</div>
+    </div>
+    <p>The question consumers ask is <em>"can I get my agent to do X?"</em> The question the infrastructure is actually being built around is different: <em>who is this agent, in a way a bank, a court, or a merchant can rely on — tomorrow, not just today?</em></p>
+
+    <div class="tool">
+      <div class="tool-label">Predict, then check</div>
+      <h3>How much of the economy already runs this way?</h3>
+      <p style="margin-bottom:6px; font-size:14.5px;">Guess: by 2026, what share of enterprises does Gartner say will rely on agents that act independently, on their own initiative, to complete transactions?</p>
+      <div class="predict-row" id="guessRow">
+        <button data-g="5%">~5%</button>
+        <button data-g="15%">~15%</button>
+        <button data-g="30%">~30%</button>
+        <button data-g="60%">~60%</button>
+      </div>
+      <div class="reveal" id="guessReveal">
+        <div class="verdict">Actual figure: 30%</div>
+        <p style="margin:0; font-size:14.5px;">Not the fringe case — nearly a third. And separately, only about 22% of organizations currently treat those agents as identity-bearing entities with formal access controls, even as 88% report an AI-related security incident. Capability arrived faster than the paperwork to govern it.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTICLE II: NOBODY'S FAULT ZONE -->
+  <section class="article">
+    <div class="art-num">Article II</div>
+    <h2>The <span class="model-name">Nobody's-Fault Zone</span></h2>
+    <p>Here is the reframe that separates people building this infrastructure from people imagining it. A newcomer asks: <em>"is the agent smart enough to be trusted with my money?"</em> Practitioners ask a narrower, colder question: <em>"when it acts wrong, whose loss is it — and can anyone prove which agent did it?"</em></p>
+    <p>As of mid-2026, <strong>no jurisdiction has assigned liability for autonomous agents acting outside their mandate.</strong> The EU AI Act classifies risk tiers but stops short of assigning responsibility. The US has no federal AI-identity legislation. Emerging agentic-payment protocols are racing ahead of that gap, not waiting for it to close.</p>
+
+    <div class="tool">
+      <div class="tool-label">Simulator</div>
+      <h3>The Spend-Cap Simulator</h3>
+      <p style="font-size:14.5px; margin-bottom:4px;">Set the leash you'd give a shopping agent, then predict what happens when it gets something wrong.</p>
+      <div class="slider-row">
+        <div class="slider-label"><span>Monthly spend cap</span><span class="slider-val" id="capVal">$500</span></div>
+        <input type="range" id="capSlider" min="50" max="5000" step="50" value="500">
+      </div>
+      <div class="slider-row">
+        <div class="slider-label"><span>Merchant scope</span><span class="slider-val" id="scopeVal">Any Visa merchant</span></div>
+        <input type="range" id="scopeSlider" min="0" max="2" step="1" value="1">
+      </div>
+      <p style="font-size:14.5px; margin-bottom:6px;">Your agent authorizes a $2,300 purchase from an unfamiliar merchant — over your cap. Predict: do you get the charge reversed?</p>
+      <div class="predict-row" id="disputeGuess">
+        <button data-d="yes">Yes, standard dispute rights apply</button>
+        <button data-d="no">No clear path exists yet</button>
+      </div>
+      <div class="reveal" id="disputeReveal">
+        <div class="verdict" id="disputeVerdict"></div>
+        <p id="disputeBody" style="margin:0; font-size:14.5px;"></p>
+        <p class="gap-note">This is the <span class="model-name">Nobody's-Fault Zone</span> again: three competing protocols (UCP for the cart, ACP for payment, AP2 for proof-of-authorization) are live in production, but the dispute framework for when they misfire isn't standardized across any of them yet.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ARTICLE III: CLONING PROBLEM -->
+  <section class="article">
+    <div class="art-num">Article III</div>
+    <h2>The <span class="model-name">Cloning Problem</span></h2>
+    <p>The most surprising finding in the research isn't regulatory — it's technical, and it undercuts the whole premise of "your agent" as a single continuous thing. Agents are, by default:</p>
+    <div class="fact-strip">
+      <div class="fact-chip">Nondeterministic — same weights, same input, different output run to run</div>
+      <div class="fact-chip">Cloneable — weights can be copied and run as many concurrent instances</div>
+      <div class="fact-chip">Sessionless by default — no persistent memory unless someone builds it in</div>
+    </div>
+    <p>A credential can verify <em>what</em> an agent is. It cannot guarantee <em>what it will do</em>, or that the instance acting today is the same one that acted yesterday. Continuity of identity — the whole premise of a "personal institution" — has to be manufactured. It isn't handed to you by the technology.</p>
+
+    <div class="tool">
+      <div class="tool-label">Blind-spot scanner</div>
+      <h3>Is it still "your" agent?</h3>
+      <p style="font-size:14.5px;">For each scenario, predict whether current agent infrastructure treats this as the same, continuous, accountable entity.</p>
+      <div id="scanList"></div>
+    </div>
+  </section>
+
+  <!-- ARTICLE IV: FAMILY OFFICE FOR ONE -->
+  <section class="article">
+    <div class="art-num">Article IV</div>
+    <h2><span class="model-name">Family Office for One</span></h2>
+    <p>None of this is presented as a reason to slow down — the opposite. It's the argument for why this matters so much: family-office-grade coordination has always been rationed by wealth, not by usefulness. Indian fintechs are already offering agentic tax-loss harvesting and risk-appetite monitoring to retail investors — the same category of service UBS's 2026 report describes 307 institutional family offices, averaging $2.7B in assets, paying dedicated staff to perform.</p>
+
+    <div class="tool">
+      <div class="tool-label">Comparison</div>
+      <h3>You, vs. a $2.7B Family Office</h3>
+      <div class="compare">
+        <div class="col">
+          <h4>Traditional Family Office</h4>
+          <ul>
+            <li>Dedicated staff monitor markets, taxes, and risk continuously</li>
+            <li>Institutional memory spans decades and generations</li>
+            <li>Minimum entry: historically tens of millions in assets</li>
+            <li>Succession &amp; legacy planning handled by named advisors</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h4>Agentic "Office of One"</h4>
+          <ul>
+            <li>Agent monitors markets and auto-harvests tax losses continuously</li>
+            <li>Institutional memory persists only if identity/continuity is solved (Article III)</li>
+            <li>Entry cost: a linked account and a spend cap</li>
+            <li>Liability for errors: unresolved (Article II)</li>
+          </ul>
+        </div>
+      </div>
+      <p class="gap-note" style="margin-top:14px;">The service gap is closing fast. The accountability gap — <span class="model-name">Nobody's-Fault Zone</span> — is not. That's the actual trade being made when you delegate.</p>
+    </div>
+  </section>
+
+  <!-- ARTICLE V: SCENARIO -->
+  <section class="article">
+    <div class="art-num">Article V</div>
+    <h2>A Week Under Charter</h2>
+    <p>Walk one week with a fictional agent, "Aldis," chartered to act across health, finance, and legal affairs. Choose how much autonomy to grant at each turn — then see the branch play out.</p>
+
+    <div class="tool">
+      <div class="tool-label">Scenario brancher</div>
+      <h3 id="branchTitle">Day 1 — A refill runs low</h3>
+      <div id="branchArea"></div>
+    </div>
+  </section>
+
+  <!-- ARTICLE VI: DIAGNOSTIC -->
+  <section class="article">
+    <div class="art-num">Article VI</div>
+    <h2>Draft Your Own Charter</h2>
+    <p>Answer honestly. Your answers assemble into a live certificate below — the same document, in miniature, that a real personal institution would eventually need to carry.</p>
+
+    <div class="tool">
+      <div class="tool-label">Diagnostic</div>
+      <h3>Sovereignty Readiness</h3>
+      <div id="quizArea"></div>
+      <div class="score-meter"><div class="score-fill" id="scoreFill"></div></div>
+      <div class="reveal" id="scoreReveal">
+        <div class="verdict" id="scoreVerdict"></div>
+        <p id="scoreBody" style="margin:0; font-size:14.5px;"></p>
+      </div>
+    </div>
+
+    <div class="cert" id="certBox">
+      <div class="cert-title">Certificate of Provisional Charter</div>
+      <div class="cert-row"><span class="cert-label">Bearer</span><span class="cert-val">You</span></div>
+      <div class="cert-row"><span class="cert-label">Spend cap authorized</span><span class="cert-val" id="certCap">—</span></div>
+      <div class="cert-row"><span class="cert-label">Merchant scope</span><span class="cert-val" id="certScope">—</span></div>
+      <div class="cert-row"><span class="cert-label">Sovereignty score</span><span class="cert-val" id="certScore">—</span></div>
+      <div class="cert-row"><span class="cert-label">Liability status</span><span class="cert-val" id="certLiability">Nobody's-Fault Zone</span></div>
+      <div class="cert-row"><span class="cert-label">Identity continuity</span><span class="cert-val" id="certIdentity">Unresolved</span></div>
+    </div>
+  </section>
+
+  <footer>
+    Charter drafted from public reporting current to July 2026 &middot; not legal, financial, or investment advice
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  // hero seal stamp
+  window.addEventListener('load', ()=>{
+    setTimeout(()=>document.getElementById('heroSeal').classList.add('stamped'), 300);
+  });
+
+  // Article I guess
+  document.querySelectorAll('#guessRow button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#guessRow button').forEach(x=>x.classList.remove('chosen'));
+      b.classList.add('chosen');
+      document.getElementById('guessReveal').classList.add('show');
+    });
+  });
+
+  // Article II simulator
+  const capSlider = document.getElementById('capSlider');
+  const scopeSlider = document.getElementById('scopeSlider');
+  const capVal = document.getElementById('capVal');
+  const scopeVal = document.getElementById('scopeVal');
+  const scopeLabels = ['Registered merchants only','Any Visa merchant','Any merchant, any protocol'];
+  function syncSliders(){
+    capVal.textContent = '$' + Number(capSlider.value).toLocaleString();
+    scopeVal.textContent = scopeLabels[scopeSlider.value];
+    updateCert();
+  }
+  capSlider.addEventListener('input', syncSliders);
+  scopeSlider.addEventListener('input', syncSliders);
+
+  document.querySelectorAll('#disputeGuess button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#disputeGuess button').forEach(x=>x.classList.remove('chosen'));
+      b.classList.add('chosen');
+      const guess = b.dataset.d;
+      const verdict = document.getElementById('disputeVerdict');
+      const body = document.getElementById('disputeBody');
+      verdict.textContent = "Reality: it depends, and mostly on infrastructure that's still being built.";
+      body.textContent = "Fenwick's 2026 analysis is blunt: there's no standard dispute-rights framework for agentic purchases yet, regardless of where the error occurred. Amex has started offering purchase protection for registered agent transactions, and Visa's Trusted Agent Protocol adds guardrails — but coverage is patchy and protocol-specific, not a guaranteed right the way a human cardholder dispute is.";
+      document.getElementById('disputeReveal').classList.add('show');
+    });
+  });
+
+  // Article III scanner
+  const scans = [
+    {
+      scenario: "You ask your agent to handle two tasks at once — it spins up a parallel instance to do so. Is that still 'one' agent?",
+      guess: ['Yes — same entity','No — now there are two'],
+      answer: "Technically, neither answer is fully wrong — and that's the problem. Model weights can be copied and run concurrently with no built-in way to enforce instance uniqueness short of hardware binding. Whether the two instances count as 'one agent' is a policy decision someone has to bolt on, not a fact the system gives you."
+    },
+    {
+      scenario: "Your agent makes the exact same request twice, a week apart. Will it produce the same decision both times?",
+      guess: ['Yes, reliably','Not guaranteed'],
+      answer: "Not guaranteed. Agents are nondeterministic by default — same weights, same input, different output is possible run to run. A credential can attest to what the agent is; it can't attest to what it will do."
+    },
+    {
+      scenario: "You close the app for a month. When you return, does your agent remember the deal it struck with your landlord's agent?",
+      guess: ['Yes, it kept notes','Only if someone built that in'],
+      answer: "Only if someone built that in. Statelessness is the default, not the exception — persistent memory across sessions is an engineering choice layered on top, and it's exactly the layer 2026's identity researchers flag as one of the least standardized parts of the stack."
+    }
+  ];
+  const scanList = document.getElementById('scanList');
+  scans.forEach((s, i)=>{
+    const div = document.createElement('div');
+    div.className = 'scan-item';
+    div.innerHTML = `<div class="scenario">${s.scenario}</div>
+      <div class="predict-row" data-idx="${i}">
+        <button data-g="0">${s.guess[0]}</button>
+        <button data-g="1">${s.guess[1]}</button>
+      </div>
+      <div class="reveal"><p style="margin:0;font-size:14px;">${s.answer}</p></div>`;
+    scanList.appendChild(div);
+    div.querySelectorAll('button').forEach(b=>{
+      b.addEventListener('click', ()=>{
+        div.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));
+        b.classList.add('chosen');
+        div.querySelector('.reveal').classList.add('show');
+      });
+    });
+  });
+
+  // Article V branching scenario
+  const branchArea = document.getElementById('branchArea');
+  const branchTitle = document.getElementById('branchTitle');
+  const branches = {
+    start: {
+      title: "Day 1 — A refill runs low",
+      path: "",
+      text: "Aldis notices a prescription will run out in 3 days and drafts a refill request to the pharmacy on your behalf.",
+      choices: [
+        {label:"Let it act autonomously", to:"auto1"},
+        {label:"Require your approval first", to:"approve1"}
+      ]
+    },
+    auto1: {
+      title: "Day 2 — It acted without you",
+      path: "Autonomous path",
+      text: "The refill goes through. But Aldis also flagged a drug interaction with a new supplement you started last week — and paused the order pending a pharmacist review, which delays it two days. Full autonomy didn't mean recklessness; it meant Aldis applied its own judgment about when to stop, on its own timeline, not yours.",
+      choices: [
+        {label:"See what the approval path would have looked like", to:"approve1"},
+        {label:"Continue to Day 5", to:"end"}
+      ]
+    },
+    approve1: {
+      title: "Day 2 — Waiting on you",
+      path: "Approval-required path",
+      text: "Aldis surfaces the request and the same interaction flag together, and waits. You're traveling and don't see the notification for 36 hours. The refill ships two days later than the autonomous path — but every decision has your name directly on it, which matters the day someone asks who approved it.",
+      choices: [
+        {label:"See what full autonomy would have looked like", to:"auto1"},
+        {label:"Continue to Day 5", to:"end"}
+      ]
+    },
+    end: {
+      title: "Day 5 — Same outcome, different paper trail",
+      path: "Both paths converge",
+      text: "Both paths land the prescription on roughly the same day. The real difference isn't speed — it's who's accountable if the interaction flag had been wrong. On the autonomous path, that's Aldis's call, sitting in the Nobody's-Fault Zone. On the approval path, it's yours, on the record. This is the actual trade in every autonomy setting: not more vs. less capability, but who holds the liability when judgment is involved.",
+      choices: [
+        {label:"Restart the scenario", to:"start"}
+      ]
+    }
+  };
+  function renderBranch(key){
+    const b = branches[key];
+    branchTitle.textContent = b.title;
+    branchArea.innerHTML = `
+      ${b.path ? `<div class="branch-path">${b.path}</div>` : ''}
+      <p style="font-size:15px;">${b.text}</p>
+      <div class="predict-row" id="branchChoices"></div>`;
+    const row = document.getElementById('branchChoices');
+    b.choices.forEach(c=>{
+      const btn = document.createElement('button');
+      btn.className = 'primary';
+      btn.textContent = c.label;
+      btn.addEventListener('click', ()=>renderBranch(c.to));
+      row.appendChild(btn);
+    });
+  }
+  renderBranch('start');
+
+  // Article VI quiz
+  const questions = [
+    {q:"How much would you let an agent spend per month without asking first?", opts:[
+      {label:"Nothing — approve every purchase", pts:0},
+      {label:"Under $200", pts:1},
+      {label:"$200–$1000", pts:2},
+      {label:"Whatever it judges reasonable", pts:3}
+    ]},
+    {q:"Would you let it negotiate on your behalf (rent, bills, subscriptions)?", opts:[
+      {label:"No", pts:0},
+      {label:"Only with a script I approve", pts:1},
+      {label:"Yes, within a budget", pts:2},
+      {label:"Yes, fully", pts:3}
+    ]},
+    {q:"Should it remember details about your health or finances across months?", opts:[
+      {label:"No, session-only", pts:0},
+      {label:"Only basics", pts:1},
+      {label:"Yes, most of it", pts:2},
+      {label:"Yes, everything, indefinitely", pts:3}
+    ]}
+  ];
+  let scoreState = [null,null,null];
+  const quizArea = document.getElementById('quizArea');
+  questions.forEach((qq,qi)=>{
+    const div = document.createElement('div');
+    div.className = 'q';
+    div.innerHTML = `<p>${qq.q}</p><div class="opts" id="opts${qi}"></div>`;
+    quizArea.appendChild(div);
+    const opts = div.querySelector('.opts');
+    qq.opts.forEach((o,oi)=>{
+      const btn = document.createElement('button');
+      btn.textContent = o.label;
+      btn.addEventListener('click', ()=>{
+        opts.querySelectorAll('button').forEach(x=>x.classList.remove('chosen'));
+        btn.classList.add('chosen');
+        scoreState[qi] = o.pts;
+        updateScore();
+      });
+      opts.appendChild(btn);
+    });
+  });
+  function updateScore(){
+    if(scoreState.includes(null)) return;
+    const total = scoreState.reduce((a,b)=>a+b,0); // 0-9
+    const pct = Math.round((total/9)*100);
+    document.getElementById('scoreFill').style.width = pct + '%';
+    const verdict = document.getElementById('scoreVerdict');
+    const body = document.getElementById('scoreBody');
+    let tier, msg;
+    if(pct < 30){
+      tier = "Tier: Cautious Principal";
+      msg = "You're keeping decisions on your own desk — which, given that only ~22% of organizations currently manage agents as identity-bearing entities with real access controls, is the position most institutions are quietly in too.";
+    } else if(pct < 65){
+      tier = "Tier: Delegated but Watched";
+      msg = "You'd grant real budget and memory, but with limits — the same posture Visa and Amex are building consumer protections around right now, rather than a fully autonomous grant.";
+    } else {
+      tier = "Tier: Full Charter";
+      msg = "You're describing something closer to a real personal institution than a tool. That's exactly the vision — and exactly why Article II and Article III (liability and identity continuity) aren't side notes. At this level of delegation, they're the whole ballgame.";
+    }
+    verdict.textContent = tier;
+    body.textContent = msg;
+    document.getElementById('scoreReveal').classList.add('show');
+    document.getElementById('certScore').textContent = pct + '% — ' + tier.replace('Tier: ','');
+  }
+
+  function updateCert(){
+    document.getElementById('certCap').textContent = capVal.textContent || '—';
+    document.getElementById('certScope').textContent = scopeVal.textContent || '—';
+  }
+  syncSliders();
+})();
+</script>
+</body>
+</html>
