@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Handoff — When AI Takes the Outcome, Not the Order</title>
+<script>
+  (function() {
+    const beaconUrl = "https://last-interface-analytics-worker.iggy-mw.workers.dev/collect";
+    fetch(beaconUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: window.location.pathname }),
+      keepalive: true
+    }).catch(err => console.error("Analytics error:", err));
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #11151b;
+    --panel: #1a2029;
+    --panel-2: #212934;
+    --line: #2c3542;
+    --ink: #e7ecf2;
+    --ink-dim: #93a1b2;
+    --amber: #e8a33d;
+    --green: #4fd1a5;
+    --red: #e2574c;
+    --blue: #6ea6ff;
+    --radius: 10px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    line-height:1.55;
+  }
+  h1,h2,h3{ font-family:'Space Grotesk', sans-serif; margin:0 0 .4em; letter-spacing:-0.01em;}
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  a{color:var(--blue);}
+  .wrap{max-width:880px; margin:0 auto; padding:0 24px;}
+
+  /* ---- Back bar / signature status board ---- */
+  .topbar{
+    position:sticky; top:0; z-index:50;
+    background:rgba(17,21,27,0.92);
+    backdrop-filter: blur(6px);
+    border-bottom:1px solid var(--line);
+  }
+  .topbar-inner{
+    max-width:880px; margin:0 auto; padding:12px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+  }
+  .back-link{
+    color:var(--ink-dim); text-decoration:none; font-size:14px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .back-link:hover{ color:var(--ink); }
+  .status-board{ display:flex; align-items:center; gap:10px; }
+  .status-lamp{
+    width:10px; height:10px; border-radius:50%;
+    background:var(--line);
+    box-shadow: 0 0 0 3px rgba(0,0,0,0.2) inset;
+    transition: background .4s ease, box-shadow .4s ease;
+  }
+  .status-lamp.on-red{ background:var(--red); box-shadow:0 0 10px var(--red); }
+  .status-lamp.on-amber{ background:var(--amber); box-shadow:0 0 10px var(--amber); }
+  .status-lamp.on-green{ background:var(--green); box-shadow:0 0 10px var(--green); }
+  .status-label{ font-size:11px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:.08em; }
+
+  section{ padding:64px 0; border-bottom:1px solid var(--line); }
+  section:last-of-type{ border-bottom:none; }
+
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px; text-transform:uppercase; letter-spacing:.12em;
+    color:var(--amber); margin-bottom:10px; display:block;
+  }
+  .lede{ font-size:19px; color:var(--ink-dim); max-width:640px; }
+
+  /* ---- Hero ---- */
+  .hero{ padding-top:56px; }
+  .hero h1{ font-size:44px; max-width:760px; }
+  .hero .sub{ font-size:18px; color:var(--ink-dim); max-width:600px; margin-top:14px;}
+
+  .goal-demo{
+    margin-top:36px; background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:24px;
+  }
+  .goal-input-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .goal-chip{
+    font-family:'IBM Plex Mono', monospace; font-size:14px;
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    padding:10px 14px; border-radius:8px; cursor:pointer; transition:.15s;
+  }
+  .goal-chip:hover{ border-color:var(--blue); color:var(--blue); }
+  .goal-chip.active{ border-color:var(--green); color:var(--green); }
+  .goal-trace{ margin-top:20px; display:flex; flex-direction:column; gap:0; }
+  .goal-step{
+    display:flex; gap:14px; padding:12px 0; border-top:1px dashed var(--line);
+    opacity:0; transform:translateY(6px);
+    animation: stepIn .4s ease forwards;
+  }
+  @keyframes stepIn{ to{ opacity:1; transform:translateY(0); } }
+  .goal-step .dot{ width:8px; height:8px; border-radius:50%; background:var(--green); margin-top:7px; flex:none; }
+  .goal-step .txt strong{ color:var(--ink); }
+  .goal-step .txt span{ color:var(--ink-dim); font-size:14px; }
+
+  /* ---- Stat strip ---- */
+  .stat-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:18px; margin-top:28px; }
+  .stat-card{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:18px; }
+  .stat-num{ font-family:'IBM Plex Mono', monospace; font-size:30px; color:var(--amber); }
+  .stat-label{ font-size:13px; color:var(--ink-dim); margin-top:4px; }
+
+  /* ---- Generic tool shell ---- */
+  .tool{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:28px; margin-top:28px;
+  }
+  .tool h3{ font-size:22px; }
+  .tool .mechanic-tag{
+    display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:11px;
+    color:var(--ink-dim); border:1px solid var(--line); border-radius:6px;
+    padding:3px 8px; margin-bottom:14px; text-transform:uppercase; letter-spacing:.06em;
+  }
+  .guess-row{
+    margin:18px 0; display:flex; gap:10px; flex-wrap:wrap;
+  }
+  .guess-btn{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--ink);
+    padding:10px 16px; border-radius:8px; cursor:pointer; font-size:14px; transition:.15s;
+  }
+  .guess-btn:hover{ border-color:var(--amber); }
+  .guess-btn.picked{ border-color:var(--blue); background:rgba(110,166,255,0.1); }
+  .reveal{
+    margin-top:16px; padding:16px 18px; border-radius:10px;
+    background:rgba(232,163,61,0.07); border:1px solid rgba(232,163,61,0.35);
+    display:none;
+  }
+  .reveal.show{ display:block; animation: stepIn .35s ease; }
+  .reveal .verdict{ font-family:'IBM Plex Mono', monospace; color:var(--amber); font-size:13px; text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px;}
+  .named-model{ color:var(--green); font-weight:600; }
+
+  /* Sliders */
+  input[type=range]{
+    width:100%; -webkit-appearance:none; height:4px; border-radius:3px;
+    background:var(--line); margin:14px 0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%;
+    background:var(--amber); cursor:pointer; box-shadow:0 0 0 4px rgba(232,163,61,0.2);
+  }
+  .dial-readout{ display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:13px; color:var(--ink-dim); }
+  .bar-row{ display:flex; align-items:center; gap:12px; margin:10px 0; }
+  .bar-label{ width:150px; font-size:13px; color:var(--ink-dim); flex:none; }
+  .bar-track{ flex:1; height:10px; background:var(--panel-2); border-radius:6px; overflow:hidden; }
+  .bar-fill{ height:100%; border-radius:6px; transition:width .5s ease; }
+
+  /* Checklist scanner */
+  .check-item{
+    display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-top:1px solid var(--line);
+    cursor:pointer;
+  }
+  .check-item:first-child{ border-top:none; }
+  .check-box{
+    width:20px; height:20px; border-radius:5px; border:1px solid var(--line);
+    flex:none; margin-top:2px; position:relative;
+  }
+  .check-item.checked .check-box{ background:var(--red); border-color:var(--red); }
+  .check-item.checked .check-box::after{
+    content:"✕"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:12px; color:#fff;
+  }
+
+  /* Comparison table */
+  .compare-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:18px; }
+  .compare-col{ background:var(--panel-2); border-radius:10px; padding:18px; border:1px solid var(--line); }
+  .compare-col.pilot{ border-color:rgba(226,87,76,0.4); }
+  .compare-col.prod{ border-color:rgba(79,209,165,0.4); }
+  .compare-col h4{ margin:0 0 10px; font-family:'IBM Plex Mono',monospace; font-size:13px; text-transform:uppercase; letter-spacing:.06em; }
+  .compare-col.pilot h4{ color:var(--red); }
+  .compare-col.prod h4{ color:var(--green); }
+  .compare-col ul{ margin:0; padding-left:18px; font-size:14px; color:var(--ink-dim); }
+  .compare-col li{ margin-bottom:8px; }
+  @media (max-width:640px){ .compare-grid{ grid-template-columns:1fr; } }
+
+  /* Ladder */
+  .ladder-rung{
+    border:1px solid var(--line); border-radius:10px; padding:16px 18px; margin-bottom:12px;
+    background:var(--panel-2); cursor:pointer;
+  }
+  .ladder-rung .rung-head{ display:flex; justify-content:space-between; align-items:center; }
+  .ladder-rung .rung-detail{ display:none; margin-top:10px; font-size:14px; color:var(--ink-dim); }
+  .ladder-rung.open .rung-detail{ display:block; }
+  .rung-tag{ font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-dim); }
+
+  /* Branch tool */
+  .branch-options{ display:flex; gap:12px; flex-wrap:wrap; margin:16px 0; }
+  .branch-btn{
+    flex:1; min-width:200px; background:var(--panel-2); border:1px solid var(--line);
+    border-radius:10px; padding:16px; cursor:pointer; text-align:left; color:var(--ink);
+  }
+  .branch-btn:hover{ border-color:var(--blue); }
+  .branch-btn strong{ display:block; margin-bottom:6px; }
+  .branch-btn span{ font-size:13px; color:var(--ink-dim); }
+  .branch-result{ display:none; margin-top:18px; }
+  .branch-result.show{ display:block; }
+  .reopen{ margin-top:14px; font-size:13px; }
+  .reopen a{ cursor:pointer; }
+
+  footer{ padding:48px 0 80px; color:var(--ink-dim); font-size:14px; }
+  .model-recap{ display:flex; gap:14px; flex-wrap:wrap; margin-top:16px; }
+  .model-pill{
+    border:1px solid var(--green); color:var(--green); border-radius:20px;
+    padding:6px 14px; font-family:'IBM Plex Mono',monospace; font-size:12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <a class="back-link" href="../index.html">&larr; back to catalog</a>
+    <div class="status-board">
+      <span class="status-label">autonomy status</span>
+      <span class="status-lamp" id="lamp1"></span>
+      <span class="status-lamp" id="lamp2"></span>
+      <span class="status-lamp" id="lamp3"></span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <section class="hero">
+    <span class="eyebrow">01 / The shift</span>
+    <h1>You stop giving steps. You start giving outcomes.</h1>
+    <p class="sub">"Make sure I'm prepared for tomorrow" is not an instruction — it's a target. Click it and watch what an outcome-owning agent decides to do with it.</p>
+
+    <div class="goal-demo">
+      <div class="goal-input-row">
+        <span class="mono" style="color:var(--ink-dim); font-size:14px;">GOAL &gt;</span>
+        <button class="goal-chip" id="goalChip">"Make sure I'm prepared for tomorrow."</button>
+      </div>
+      <div class="goal-trace" id="goalTrace"></div>
+    </div>
+  </section>
+
+  <!-- STAT STRIP -->
+  <section>
+    <span class="eyebrow">02 / What's actually happening</span>
+    <h2>The industry is handing out outcomes faster than it can supervise them</h2>
+    <p class="lede">Multi-agent systems are Gartner's top strategic technology trend for 2026, and Gartner projects 40% of enterprise applications will ship task-specific agents this year, up from under 5% in 2025. Adoption is not the bottleneck. What comes next is.</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="stat-num">11%</div><div class="stat-label">of enterprise agentic use cases actually reached full production last year (Camunda, 2026)</div></div>
+      <div class="stat-card"><div class="stat-num">77–95%</div><div class="stat-label">range of agentic initiatives that stall short of production, per 2026 Gartner / Forrester / McKinsey / MIT research</div></div>
+      <div class="stat-card"><div class="stat-num">21%</div><div class="stat-label">of companies say they have a mature framework for governing an autonomous agent (Deloitte)</div></div>
+      <div class="stat-card"><div class="stat-num">8%</div><div class="stat-label">of surveyed users are comfortable giving an agent total autonomy, even with guardrails (G2)</div></div>
+    </div>
+  </section>
+
+  <!-- TOOL 1: Confidence Trap Detector -->
+  <section>
+    <span class="eyebrow">03 / Blind-spot scanner</span>
+    <h2>The Confidence Trap Detector</h2>
+    <p class="lede">Newcomers assume the risk with an outcome-owning agent is that it might not be smart enough. Tick the boxes below that describe how you actually behave around a capable assistant — before you see what they add up to.</p>
+    <div class="tool">
+      <span class="mechanic-tag">5-item checklist &rarr; pattern reveal</span>
+      <div id="trapList">
+        <div class="check-item" data-w="1"><div class="check-box"></div><div>I stop double-checking a tool's output once it's been right a few times in a row.</div></div>
+        <div class="check-item" data-w="1"><div class="check-box"></div><div>A confident, fluent explanation makes me more likely to accept an answer without verifying it.</div></div>
+        <div class="check-item" data-w="1"><div class="check-box"></div><div>I talk to my assistant the way I'd talk to a competent colleague, and extend it similar benefit of the doubt.</div></div>
+        <div class="check-item" data-w="1"><div class="check-box"></div><div>I've let it touch something — a calendar, an inbox, a file — that I didn't fully review afterward.</div></div>
+        <div class="check-item" data-w="1"><div class="check-box"></div><div>I'd struggle to explain, after the fact, exactly why it made a specific decision.</div></div>
+      </div>
+      <div class="reveal" id="trapReveal">
+        <div class="verdict" id="trapVerdict">—</div>
+        <p id="trapText"></p>
+        <p style="margin-top:10px;">Researchers call the underlying mechanism <strong>automation bias</strong>: a fluent, confident agent builds source credibility the same way a fluent, confident person does, and that credibility gets extended into a discount on scrutiny. This is <span class="named-model">the Confidence Trap</span> — the gap between how sure an agent sounds and how sure you've actually verified it is.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL 2: Autonomy Dial -->
+  <section>
+    <span class="eyebrow">04 / Simulator</span>
+    <h2>The Autonomy Dial</h2>
+    <p class="lede">Before you touch the dial: if you gave an agent full autonomy over a real outcome, what fraction of users do you think would be fully comfortable with that today?</p>
+    <div class="tool">
+      <span class="mechanic-tag">1 slider (autonomy granted) &rarr; projected speed vs. projected supervision debt</span>
+      <div class="guess-row" id="dialGuessRow">
+        <button class="guess-btn" data-g="2">Under 10%</button>
+        <button class="guess-btn" data-g="35">Around a third</button>
+        <button class="guess-btn" data-g="60">Over half</button>
+      </div>
+      <div class="reveal" id="dialGuessReveal">
+        <div class="verdict">Actual figure</div>
+        <p>Just <strong>8%</strong> of surveyed users are comfortable giving an agent total autonomy, even with guardrails in place — and 63% say their agents need <em>more</em> supervision than they expected going in. The <span class="named-model">Confidence Trap</span> shows up here too: the more fluent the agent, the more autonomy people are tempted to grant faster than the evidence supports.</p>
+      </div>
+      <div style="margin-top:22px;">
+        <label class="dial-readout"><span>Autonomy granted</span><span id="dialPct" class="mono">40%</span></label>
+        <input type="range" min="0" max="100" value="40" id="autonomySlider">
+        <div class="bar-row"><div class="bar-label">Task speed gained</div><div class="bar-track"><div class="bar-fill" id="speedBar" style="background:var(--blue); width:40%;"></div></div></div>
+        <div class="bar-row"><div class="bar-label">Unsupervised failure risk</div><div class="bar-track"><div class="bar-fill" id="riskBar" style="background:var(--red); width:20%;"></div></div></div>
+        <div class="bar-row"><div class="bar-label">Org's ability to explain a bad call</div><div class="bar-track"><div class="bar-fill" id="explainBar" style="background:var(--green); width:70%;"></div></div></div>
+        <p id="dialCaption" style="font-size:13px; color:var(--ink-dim); margin-top:12px;"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL 3: Delegation Readiness Score -->
+  <section>
+    <span class="eyebrow">05 / Diagnostic score</span>
+    <h2>The Delegation Readiness Score</h2>
+    <p class="lede">Six yes/no questions, weighted by what actually separates the 11% of organizations running agents in production from everyone still stuck piloting.</p>
+    <div class="tool">
+      <span class="mechanic-tag">6 toggles &rarr; weighted 0–100 score &rarr; tier verdict</span>
+      <div id="scoreList">
+        <div class="check-item" data-w="20"><div class="check-box"></div><div>The agent is scoped to one narrow, named business process — not "help wherever needed."</div></div>
+        <div class="check-item" data-w="18"><div class="check-box"></div><div>There's an evaluation harness that tests the agent before any scope increase, not just before launch.</div></div>
+        <div class="check-item" data-w="18"><div class="check-box"></div><div>A human reviews every step that's expensive, irreversible, or externally visible.</div></div>
+        <div class="check-item" data-w="16"><div class="check-box"></div><div>Permissions are time-bound and scoped — the agent can't reach systems it doesn't currently need.</div></div>
+        <div class="check-item" data-w="14"><div class="check-box"></div><div>One named person owns the outcome end-to-end, not just the team that built the agent.</div></div>
+        <div class="check-item" data-w="14"><div class="check-box"></div><div>There's a written threshold for when autonomy increases — and when it gets pulled back.</div></div>
+      </div>
+      <div style="margin-top:18px;">
+        <div class="dial-readout"><span>Readiness score</span><span class="mono" id="scoreVal">0 / 100</span></div>
+        <div class="bar-track" style="height:14px; margin-top:6px;"><div class="bar-fill" id="scoreBar" style="width:0%; background:var(--red);"></div></div>
+      </div>
+      <div class="reveal show" id="scoreReveal">
+        <div class="verdict" id="scoreVerdict">PERMANENT PILOT MODE</div>
+        <p id="scoreText">Check items above to see your tier. Most organizations, checking honestly, land here — Gartner's own term for an agent that works but never earns its way out of supervision-heavy limbo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL 4: Scenario brancher -->
+  <section>
+    <span class="eyebrow">06 / Scenario brancher</span>
+    <h2>Give the Agent an Outcome</h2>
+    <p class="lede">You hand your agent the goal from the top of the page: "make sure I'm prepared for tomorrow." It has to decide how much to touch on its own versus check with you first. Pick its operating mode.</p>
+    <div class="tool">
+      <span class="mechanic-tag">2-path branch &rarr; cascading consequence &rarr; reopened branch</span>
+      <div class="branch-options" id="branchOptions">
+        <button class="branch-btn" data-path="wide"><strong>Wide scope, no check-ins</strong><span>It reorders supplies, rewrites your calendar, and emails a client to reschedule — all before you wake up.</span></button>
+        <button class="branch-btn" data-path="narrow"><strong>Narrow scope, one approval gate</strong><span>It drafts everything and flags the one step that touches another person, then waits for your yes.</span></button>
+      </div>
+      <div class="branch-result" id="branchResultWide">
+        <div class="verdict" style="color:var(--red);">Overnight, unsupervised</div>
+        <p>The reschedule email goes out with a mismatched time zone. By morning it's already sent, already read, and already awkward. Nothing here was a "bug" — the agent did exactly what a wide, ungoverned mandate authorized it to do. This is the shape of the <strong>capability-deployment verification gap</strong> researchers describe: the agent could do the task; nobody could catch it before the world saw the mistake.</p>
+        <div class="reopen"><a onclick="reopenBranch()">&larr; What if you'd chosen the narrow path instead?</a></div>
+      </div>
+      <div class="branch-result" id="branchResultNarrow">
+        <div class="verdict" style="color:var(--green);">Overnight, one gate held</div>
+        <p>Everything gets drafted on time. The one external email sits in a queue with a one-line summary, waiting for your thumbs-up over coffee. You lost a little speed. You kept the one thing that consumer trust research consistently finds people actually want: 77% of surveyed consumers want human approval before an agent acts, even when they're happy to let it plan freely on its own. That's <span class="named-model">the Delegation Ladder</span> in miniature — autonomy earned rung by rung, not granted all at once.</p>
+        <div class="reopen"><a onclick="reopenBranch()">&larr; What if you'd chosen the wide path instead?</a></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TOOL 5: Comparison -->
+  <section>
+    <span class="eyebrow">07 / Side by side</span>
+    <h2>Permanent Pilot Mode, next to the 11%</h2>
+    <p class="lede">Same underlying model. Two organizations. The difference isn't in what the agent can do.</p>
+    <div class="compare-grid">
+      <div class="compare-col pilot">
+        <h4>Stuck in Permanent Pilot Mode</h4>
+        <ul>
+          <li>Agent is granted broad access up front, "to see what it can do"</li>
+          <li>No written threshold for expanding or pulling back autonomy</li>
+          <li>Governance applied uniformly — either fully locked down or fully trusted</li>
+          <li>Ownership of the outcome lives with "the team that built it"</li>
+          <li>Autonomy relaxes quietly over time until nobody remembers who approved what</li>
+        </ul>
+      </div>
+      <div class="compare-col prod">
+        <h4>Reached production</h4>
+        <ul>
+          <li>Agent scoped to one narrow, high-volume, named process</li>
+          <li>Autonomy increases against a measured evaluation harness, not on faith</li>
+          <li>Governance matches the specific trust boundary the agent operates in</li>
+          <li>One named person owns the outcome end-to-end</li>
+          <li>Median time-to-value around five months, with reported ROI well over 100% in some functions</li>
+        </ul>
+      </div>
+    </div>
+    <p style="margin-top:18px; color:var(--ink-dim); font-size:14px;">Gartner's own analysts point at the left column's middle row as the actual root cause: treating governance as binary — locked down or fully trusted — rather than matched to each agent's actual trust boundary.</p>
+  </section>
+
+  <!-- TOOL 6: Delegation Ladder -->
+  <section>
+    <span class="eyebrow">08 / Counterfactual timeline</span>
+    <h2>The Delegation Ladder</h2>
+    <p class="lede">Before you open each rung: does trust in an agent typically increase smoothly as it climbs from simple to autonomous — or does it break somewhere along the way?</p>
+    <div class="tool">
+      <span class="mechanic-tag">4 rungs &rarr; guess trust trajectory &rarr; reveal where it actually breaks</span>
+      <div class="ladder-rung" onclick="this.classList.toggle('open')">
+        <div class="rung-head"><strong>Rung 1 — Reflex agent</strong><span class="rung-tag">answers, doesn't act</span></div>
+        <div class="rung-detail">An FAQ bot. Trust is cheap here because the blast radius of a wrong answer is small — a person reads it and decides for themselves.</div>
+      </div>
+      <div class="ladder-rung" onclick="this.classList.toggle('open')">
+        <div class="rung-head"><strong>Rung 2 — Goal-based agent</strong><span class="rung-tag">takes an objective, plans steps</span></div>
+        <div class="rung-detail">This is where "make sure I'm prepared for tomorrow" lives. It can chain actions across tools. Trust is still growing here — but this is also the rung where 63% of teams report needing more supervision than they expected.</div>
+      </div>
+      <div class="ladder-rung" onclick="this.classList.toggle('open')">
+        <div class="rung-head"><strong>Rung 3 — Utility-based agent</strong><span class="rung-tag">optimizes a metric across many decisions</span></div>
+        <div class="rung-detail">It's not just completing the goal, it's choosing between competing ways to complete it. This is where the ladder most often breaks: only about 21% of organizations report a governance framework mature enough to say who's accountable for the optimization it chose.</div>
+      </div>
+      <div class="ladder-rung" onclick="this.classList.toggle('open')">
+        <div class="rung-head"><strong>Rung 4 — Fully autonomous, unsupervised</strong><span class="rung-tag">no approval gate at all</span></div>
+        <div class="rung-detail">Only 8% of users say they'd be comfortable here today, even with guardrails. Reaching this rung without the governance built at rung 3 is exactly the setup Gartner expects to send 40% of enterprises into demoting or decommissioning their own agents by 2027.</div>
+      </div>
+      <p style="margin-top:14px; font-size:14px; color:var(--ink-dim);">Trust doesn't climb the ladder on its own — it has to be built rung by rung, which is <span class="named-model">the Delegation Ladder</span> at work again, this time as the difference between an agent that keeps climbing and one that gets pulled back down.</p>
+    </div>
+  </section>
+
+  <!-- CLOSING -->
+  <section>
+    <span class="eyebrow">09 / The reframe</span>
+    <h2>The question changes once you've built one of these</h2>
+    <p class="lede">A newcomer to outcome-owning agents asks: <em>is the model smart enough to handle this goal?</em> Nearly every practitioner cited above — Gartner, Deloitte, Camunda, G2 — is answering a completely different question: <em>can the organization survive the agent being confidently wrong, and can it say afterward who let that happen?</em> The model was rarely the bottleneck in any of the research above. The accountability structure around it was.</p>
+    <div class="model-recap">
+      <span class="model-pill">The Confidence Trap</span>
+      <span class="model-pill">Permanent Pilot Mode</span>
+      <span class="model-pill">The Delegation Ladder</span>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap">
+    <p>Built as a scroll-through toolset, learning experience, and briefing in one. Figures drawn from 2026 research by Gartner, Deloitte, Camunda, G2, and Blackbox/Sumsub.</p>
+  </div>
+</footer>
+
+<script>
+  // Hero goal demo
+  const goalSteps = [
+    { s: "Checks your calendar for tomorrow's first meeting and its prep materials.", d: "Reads context — doesn't ask which meeting you meant." },
+    { s: "Drafts a one-page briefing note summarizing the account history.", d: "Chooses tone and length itself, based on the meeting type." },
+    { s: "Notices your usual coffee subscription runs out Thursday, reorders it.", d: "Nobody asked about coffee. The goal implied it." },
+    { s: "Flags a scheduling conflict at 2pm and proposes a fix — but doesn't send anything yet.", d: "This is the one step it treats as risky enough to wait on you." }
+  ];
+  const chip = document.getElementById('goalChip');
+  const trace = document.getElementById('goalTrace');
+  let demoRun = false;
+  chip.addEventListener('click', () => {
+    if (demoRun) return;
+    demoRun = true;
+    chip.classList.add('active');
+    trace.innerHTML = '';
+    goalSteps.forEach((step, i) => {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'goal-step';
+        el.style.animationDelay = '0s';
+        el.innerHTML = `<div class="dot"></div><div class="txt"><strong>${step.s}</strong><br><span>${step.d}</span></div>`;
+        trace.appendChild(el);
+        // lamp progression
+        if (i === 0) setLamp(1);
+        if (i === 1) setLamp(2);
+        if (i === 3) setLamp(3);
+      }, i * 550);
+    });
+  });
+
+  function setLamp(n){
+    const lamps = ['lamp1','lamp2','lamp3'];
+    const colors = ['on-red','on-amber','on-green'];
+    for(let i=0;i<n;i++){
+      document.getElementById(lamps[i]).className = 'status-lamp ' + colors[i];
+    }
+  }
+
+  // Trap detector
+  const trapItems = document.querySelectorAll('#trapList .check-item');
+  const trapReveal = document.getElementById('trapReveal');
+  const trapVerdict = document.getElementById('trapVerdict');
+  const trapText = document.getElementById('trapText');
+  function updateTrap(){
+    const checked = document.querySelectorAll('#trapList .check-item.checked').length;
+    if(checked === 0){ trapReveal.classList.remove('show'); return; }
+    trapReveal.classList.add('show');
+    if(checked <= 1){ trapVerdict.textContent = 'LOW EXPOSURE'; trapText.textContent = "You're mostly outside the trap for now — but this is exactly how it starts: one comfortable exception at a time."; }
+    else if(checked <= 3){ trapVerdict.textContent = 'MODERATE EXPOSURE'; trapText.textContent = "You're extending real trust based on fluency and streaks, not verification. That's the normal, human, and exactly-how-the-research-predicted pattern."; }
+    else { trapVerdict.textContent = 'HIGH EXPOSURE'; trapText.textContent = "You've already crossed into automation bias territory — the same pattern researchers found drives people to overlook risky or incorrect agent actions entirely."; }
+  }
+  trapItems.forEach(item => item.addEventListener('click', () => { item.classList.toggle('checked'); updateTrap(); }));
+
+  // Dial guess
+  document.querySelectorAll('#dialGuessRow .guess-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('#dialGuessRow .guess-btn').forEach(b=>b.classList.remove('picked'));
+      btn.classList.add('picked');
+      document.getElementById('dialGuessReveal').classList.add('show');
+    });
+  });
+
+  // Autonomy dial
+  const slider = document.getElementById('autonomySlider');
+  const dialPct = document.getElementById('dialPct');
+  const speedBar = document.getElementById('speedBar');
+  const riskBar = document.getElementById('riskBar');
+  const explainBar = document.getElementById('explainBar');
+  const dialCaption = document.getElementById('dialCaption');
+  function updateDial(){
+    const v = +slider.value;
+    dialPct.textContent = v + '%';
+    speedBar.style.width = Math.min(95, 20 + v*0.75) + '%';
+    riskBar.style.width = Math.min(92, v*0.9) + '%';
+    explainBar.style.width = Math.max(8, 90 - v*0.8) + '%';
+    if(v < 25) dialCaption.textContent = "Cautious. Slow, but every action is still traceable to a human decision.";
+    else if(v < 60) dialCaption.textContent = "This is where most goal-based agents actually operate today — real speed, real risk, and shrinking ability to explain a bad call after the fact.";
+    else dialCaption.textContent = "You're now past what 92% of surveyed users say they're comfortable with — and past where most organizations have governance to match.";
+  }
+  slider.addEventListener('input', updateDial);
+  updateDial();
+
+  // Readiness score
+  const scoreItems = document.querySelectorAll('#scoreList .check-item');
+  const scoreVal = document.getElementById('scoreVal');
+  const scoreBar = document.getElementById('scoreBar');
+  const scoreVerdict = document.getElementById('scoreVerdict');
+  const scoreText = document.getElementById('scoreText');
+  function updateScore(){
+    let total = 0;
+    scoreItems.forEach(item => { if(item.classList.contains('checked')) total += +item.dataset.w; });
+    scoreVal.textContent = total + ' / 100';
+    scoreBar.style.width = total + '%';
+    if(total < 40){ scoreBar.style.background = 'var(--red)'; scoreVerdict.textContent = 'PERMANENT PILOT MODE'; scoreText.textContent = "This is where roughly 89% of organizations sit — technically live, never fully trusted, never quite cancelled either."; }
+    else if(total < 75){ scoreBar.style.background = 'var(--amber)'; scoreVerdict.textContent = 'BOUNDED DELEGATION'; scoreText.textContent = "You have real guardrails but not yet the full evaluation loop that lets autonomy expand safely."; }
+    else { scoreBar.style.background = 'var(--green)'; scoreVerdict.textContent = 'EARNED AUTONOMY'; scoreText.textContent = "This is the roughly 11% profile — narrow scope, a measured threshold for expanding trust, and one named owner for the outcome."; }
+  }
+  scoreItems.forEach(item => item.addEventListener('click', () => { item.classList.toggle('checked'); updateScore(); }));
+
+  // Branch tool
+  document.querySelectorAll('.branch-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('branchResultWide').classList.remove('show');
+      document.getElementById('branchResultNarrow').classList.remove('show');
+      const path = btn.dataset.path;
+      document.getElementById(path === 'wide' ? 'branchResultWide' : 'branchResultNarrow').classList.add('show');
+    });
+  });
+  function reopenBranch(){
+    document.getElementById('branchResultWide').classList.remove('show');
+    document.getElementById('branchResultNarrow').classList.remove('show');
+    document.querySelector('#branchOptions').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  // Scroll-based lamp sync (signature element continuity)
+  const sections = document.querySelectorAll('section');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting){
+        const idx = Array.from(sections).indexOf(entry.target);
+        const ratio = idx / (sections.length - 1);
+        if(ratio < 0.34) setLamp(1);
+        else if(ratio < 0.7) setLamp(2);
+        else setLamp(3);
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(s => observer.observe(s));
+</script>
+
+</body>
+</html>
