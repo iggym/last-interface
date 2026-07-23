@@ -1,501 +1,406 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>The Last Interface | Control, Permission, & Autonomy</title>
-  <style>
-    :root {
-      --bg: #030712;
-      --card-bg: rgba(15, 23, 42, 0.65);
-      --border: rgba(51, 65, 85, 0.5);
-      --border-hover: #38bdf8;
-      --text: #f8fafc;
-      --text-muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-glow: rgba(56, 189, 248, 0.2);
-      --emerald: #10b981;
-      --emerald-glow: rgba(16, 185, 129, 0.2);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Last Interface — The Wire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0c0a08;
+    --bg-raised:#141110;
+    --paper:#e8e2d5;
+    --muted:#78716a;
+    --amber:#ffb020;
+    --amber-dim:#6b5230;
+    --cold:#6fd3c7;
+    --rule: rgba(232,226,213,0.09);
+    --rule-strong: rgba(232,226,213,0.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    min-height:100vh;
+    position:relative;
+    -webkit-font-smoothing:antialiased;
+  }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* ambient scanline + vignette, static — no node network, restraint */
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 3px),
+      radial-gradient(ellipse at 50% -10%, rgba(255,176,32,0.06), transparent 55%);
+    pointer-events:none;
+    z-index:0;
+  }
 
-    body {
-      background-color: var(--bg);
-      color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      overflow-x: hidden;
-      position: relative;
-    }
+  a{color:inherit;}
+  :focus-visible{outline:2px solid var(--cold); outline-offset:3px;}
 
-    #bg-canvas {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 0;
-      pointer-events: none;
-      opacity: 0.7;
-    }
+  .wrap{
+    position:relative; z-index:1;
+    max-width:760px;
+    margin:0 auto;
+    padding:4rem 1.5rem 6rem;
+  }
 
-    .wrapper {
-      position: relative;
-      z-index: 1;
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 3.5rem 1.25rem 4rem;
-      width: 100%;
-    }
+  /* ---- masthead ---- */
+  .mast{margin-bottom:3rem;}
+  .signal-row{
+    display:flex; align-items:center; gap:.6rem;
+    font-size:.7rem; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--amber); margin-bottom:1.6rem;
+  }
+  .live-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 8px var(--amber);
+    animation:pulse 2.2s ease-in-out infinite;
+    flex-shrink:0;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:1; transform:scale(1);}
+    50%{opacity:.35; transform:scale(.7);}
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight:700;
+    font-size:clamp(1.9rem, 5vw, 2.75rem);
+    letter-spacing:-0.02em;
+    color:var(--paper);
+    margin-bottom:.9rem;
+  }
+  h1 .rule-name{
+    display:block;
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:400;
+    font-size:.85rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:.55rem;
+  }
+  .mast p{
+    color:var(--muted);
+    font-size:.92rem;
+    line-height:1.7;
+    max-width:56ch;
+  }
 
-    header {
-      text-align: center;
-      margin-bottom: 3.5rem;
-    }
+  /* ---- console: scan + channels ---- */
+  .console{
+    margin-bottom:2.4rem;
+    border-top:1px solid var(--rule);
+    border-bottom:1px solid var(--rule);
+    padding:1.1rem 0;
+  }
+  .scan-line{
+    display:flex; align-items:center; gap:.6rem;
+    margin-bottom:.85rem;
+  }
+  .scan-line .caret{color:var(--cold); font-weight:600;}
+  #search{
+    flex:1;
+    background:transparent;
+    border:none;
+    color:var(--paper);
+    font-family:inherit;
+    font-size:.9rem;
+    outline:none;
+    caret-color:var(--cold);
+  }
+  #search::placeholder{color:var(--muted);}
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.35rem 0.85rem;
-      border-radius: 9999px;
-      background: rgba(56, 189, 248, 0.08);
-      border: 1px solid rgba(56, 189, 248, 0.25);
-      color: var(--accent);
-      font-size: 0.75rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 1.25rem;
-      backdrop-filter: blur(8px);
-    }
+  .channels{
+    display:flex; flex-wrap:wrap; gap:0 1rem;
+    font-size:.72rem; letter-spacing:.08em; text-transform:uppercase;
+  }
+  .chan-btn{
+    background:none; border:none; cursor:pointer;
+    color:var(--muted);
+    font-family:inherit; font-size:inherit; letter-spacing:inherit;
+    padding:.15rem 0;
+    position:relative;
+  }
+  .chan-btn::after{
+    content:'';
+    position:absolute; left:0; right:0; bottom:-2px;
+    height:1px; background:var(--cold);
+    transform:scaleX(0); transform-origin:left;
+    transition:transform .2s ease;
+  }
+  .chan-btn:hover{color:var(--paper);}
+  .chan-btn.active{color:var(--cold);}
+  .chan-btn.active::after{transform:scaleX(1);}
 
-    .badge-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent);
-    }
+  /* ---- the wire (feed) ---- */
+  .wire{position:relative;}
+  .wire::before{
+    /* signal rail */
+    content:'';
+    position:absolute; left:-1.4rem; top:0; bottom:0; width:1px;
+    background:linear-gradient(180deg, var(--rule-strong), transparent 96%);
+    display:none;
+  }
+  @media(min-width:600px){ .wire::before{display:block;} }
 
-    h1 {
-      font-size: clamp(2.25rem, 6vw, 3.75rem);
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1.1;
-      background: linear-gradient(135deg, #ffffff 40%, #94a3b8 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 1.25rem;
-    }
+  .entry{
+    border-bottom:1px solid var(--rule);
+    padding:1.15rem 0;
+  }
+  .entry:first-child{padding-top:0;}
 
-    p.subtitle {
-      color: var(--text-muted);
-      font-size: clamp(1rem, 2vw, 1.15rem);
-      max-width: 680px;
-      margin: 0 auto;
-      line-height: 1.6;
-      font-weight: 400;
-    }
+  .entry-head{
+    display:flex; align-items:baseline; gap:.85rem;
+    cursor:pointer;
+    background:none; border:none; width:100%; text-align:left;
+    color:inherit; font-family:inherit;
+    padding:0;
+  }
+  .idx{
+    font-size:.72rem; color:var(--muted);
+    width:1.6rem; flex-shrink:0;
+  }
+  .marker{
+    width:5px;height:5px;border-radius:50%;
+    background:var(--amber);
+    box-shadow:0 0 6px var(--amber);
+    flex-shrink:0;
+    transition:all .3s ease;
+  }
+  .entry.read .marker{
+    background:var(--amber-dim);
+    box-shadow:none;
+  }
+  .headline{
+    font-size:1rem;
+    line-height:1.45;
+    color:var(--paper);
+    flex:1;
+    transition:color .2s ease;
+  }
+  .entry.read .headline{color:#b8b2a5;}
+  .entry-head:hover .headline{color:var(--amber);}
+  .date-stamp{
+    font-size:.68rem; color:var(--muted);
+    flex-shrink:0; white-space:nowrap;
+    padding-top:.15rem;
+  }
 
-    .controls {
-      margin-bottom: 2.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
+  .entry-body{
+    max-height:0;
+    overflow:hidden;
+    transition:max-height .35s ease, opacity .3s ease, margin .3s ease;
+    opacity:0;
+    margin-left:2.45rem;
+  }
+  .entry.open .entry-body{
+    max-height:14rem;
+    opacity:1;
+    margin-top:.75rem;
+  }
+  .summary{
+    color:#c9c3b6;
+    font-size:.88rem;
+    line-height:1.7;
+    max-width:58ch;
+  }
+  .entry-footer{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top:.9rem;
+    flex-wrap:wrap; gap:.7rem;
+  }
+  .tags-row{
+    display:flex; gap:.7rem; flex-wrap:wrap;
+    font-size:.68rem; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted);
+  }
+  .tags-row span:not(:last-child)::after{content:'·'; margin-left:.7rem; color:var(--rule-strong);}
+  .run-link{
+    font-size:.75rem; font-weight:500;
+    color:var(--cold);
+    text-decoration:none;
+    letter-spacing:.04em;
+    display:inline-flex; align-items:center; gap:.3rem;
+    padding:.3rem .1rem;
+  }
+  .run-link:hover{text-decoration:underline;}
+  .pinned-tag{
+    font-size:.65rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--amber);
+  }
 
-    .search-wrapper {
-      position: relative;
-      width: 100%;
-    }
+  .empty-state{
+    padding:2.5rem 0; color:var(--muted); font-size:.88rem; text-align:center;
+  }
 
-    .search-bar {
-      width: 100%;
-      padding: 1rem 1.25rem;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      background: rgba(15, 23, 42, 0.8);
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
-      backdrop-filter: blur(12px);
-      transition: all 0.25s ease;
-    }
+  footer{
+    position:relative; z-index:1;
+    text-align:center;
+    color:var(--muted);
+    font-size:.72rem;
+    padding:2.5rem 1.5rem;
+    letter-spacing:.04em;
+  }
 
-    .search-bar:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 20px rgba(0, 0, 0, 0.4);
-    }
-
-    .tags-filter {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-
-    .tag-btn {
-      background: rgba(30, 41, 59, 0.5);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      padding: 0.45rem 0.85rem;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-      backdrop-filter: blur(8px);
-      transition: all 0.2s ease;
-    }
-
-    .tag-btn:hover, .tag-btn.active {
-      background: var(--accent);
-      color: #030712;
-      border-color: var(--accent);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
-    }
-
-    .card {
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      backdrop-filter: blur(12px);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.4), transparent);
-      opacity: 0;
-      transition: opacity 0.25s ease;
-    }
-
-    .card:hover {
-      transform: translateY(-4px);
-      border-color: var(--border-hover);
-      box-shadow: 0 16px 32px -12px rgba(0, 0, 0, 0.6), 0 0 24px var(--accent-glow);
-    }
-
-    .card:hover::before { opacity: 1; }
-
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.85rem;
-      gap: 0.75rem;
-    }
-
-    .card-title {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #ffffff;
-      line-height: 1.35;
-      letter-spacing: -0.01em;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #334155;
-      flex-shrink: 0;
-      margin-top: 6px;
-      transition: all 0.3s ease;
-    }
-
-    .card.visited .status-dot {
-      background: var(--emerald);
-      box-shadow: 0 0 10px var(--emerald);
-    }
-
-    .card-summary {
-      color: var(--text-muted);
-      font-size: 0.925rem;
-      line-height: 1.6;
-      margin-bottom: 1.75rem;
-    }
-
-    .card-footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
-    }
-
-    .card-tags {
-      display: flex;
-      gap: 0.4rem;
-      flex-wrap: wrap;
-    }
-
-    .tag {
-      font-size: 0.725rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.04);
-      color: #cbd5e1;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-
-    .launch-link {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      transition: transform 0.2s ease;
-    }
-
-    .card:hover .launch-link {
-      transform: translateX(3px);
-    }
-
-    footer {
-      margin-top: auto;
-      padding: 2.5rem 1.25rem;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.85rem;
-      border-top: 1px solid rgba(51, 65, 85, 0.3);
-      position: relative;
-      z-index: 1;
-    }
-  </style>
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important;}
+  }
+</style>
 </head>
 <body>
 
-  <canvas id="bg-canvas"></canvas>
+<div class="wrap">
+  <header class="mast">
+    <div class="signal-row"><span class="live-dot"></span> Signal live — 6 transmissions</div>
+    <h1><span class="rule-name">The Last Interface</span>The Wire</h1>
+    <p>Control, permission, and autonomy in future software — read as it comes in, not filed into a grid. Pin a line to read it. Run it to go deeper.</p>
+  </header>
 
-  <div class="wrapper">
-    <header>
-      <div class="badge">
-        <span class="badge-dot"></span>
-        Autonomous Systems & Permission Architecture
-      </div>
-      <h1>The Last Interface</h1>
-      <p class="subtitle">Control, permission, and autonomy in future software. Interactive briefs on the inevitable transition from manual tools to background agent execution.</p>
-    </header>
-
-    <div class="controls">
-      <div class="search-wrapper">
-        <input type="text" id="search" class="search-bar" placeholder="Search ideas, security models, architectures...">
-      </div>
-      <div class="tags-filter" id="tagsFilter">
-        <button class="tag-btn active" data-tag="ALL">All</button>
-      </div>
+  <div class="console">
+    <div class="scan-line">
+      <span class="caret">›</span>
+      <input type="text" id="search" placeholder="scan the wire…" autocomplete="off">
     </div>
-
-    <div class="grid" id="catalog"></div>
+    <div class="channels" id="channels">
+      <button class="chan-btn active" data-tag="ALL">All</button>
+    </div>
   </div>
 
-  <footer>
-    <p>The Last Interface • Hosted on GitHub Pages • Single-File Interactive Architecture</p>
-  </footer>
+  <div class="wire" id="wire"></div>
+</div>
 
-  <script>
-    // Master fallback dataset
-    const DEFAULT_ARTICLES = [
-      {
-        id: "01-permission-guardrails",
-        title: "Autonomous Permission Guardrails",
-        summary: "How human-in-the-loop OAuth scopes and Governance-as-Code prevent rogue agentic API loops while maintaining execution speed.",
-        tags: ["Security", "Governance", "Interactive"],
-        date: "2026-07-21",
-        file: "articles/01-permission-guardrails.html"
-      },
-      {
-        id: "02-federated-agent-swarms",
-        title: "The Swarm Architecture",
-        summary: "Moving past single 'God Models' toward specialized multi-agent networks that collaborate on zero-copy data layers.",
-        tags: ["Architecture", "Multi-Agent", "Canvas"],
-        date: "2026-07-18",
-        file: "articles/02-federated-agent-swarms.html"
-      },
-      {
-        id: "03-zero-copy-context",
-        title: "Zero-Copy Data Access",
-        summary: "Why future software won't import your databases—agents will query system data in-place without moving a single byte.",
-        tags: ["Data Systems", "Privacy", "Interactive"],
-        date: "2026-07-15",
-        file: "articles/03-zero-copy-context.html"
-      },
-      {
-        id: "04-intent-translation-layer",
-        title: "The Intent Engine",
-        summary: "Translating natural human goals into structured execution graphs without rigid manual software inputs.",
-        tags: ["UX", "State Graphs", "Simulation"],
-        date: "2026-07-10",
-        file: "articles/04-intent-translation-layer.html"
-      }
-    ];
+<footer>The Last Interface · The Wire · single-file, no build step</footer>
 
-    let articles = [];
-    let selectedTag = "ALL";
-    const catalog = document.getElementById('catalog');
-    const search = document.getElementById('search');
-    const tagsFilter = document.getElementById('tagsFilter');
+<script>
+const DEFAULT_ARTICLES = [
+  { id:"05-no-attention", title:"Only thing that does not need your attention.", summary:"The best agent you'll use this year won't ask for your attention.", tags:["Security","Governance","Interactive"], date:"2026-07-21", file:"articles/no-attention.html" },
+  { id:"06-building-guardrails", title:"Everyone's building agents. Most never leave the hangar.", summary:"Six live instruments for reading where AI agents actually stand right now — not the pitch deck version. Every dial below is calibrated to a real 2026 dataset.", tags:["Security","Governance","Interactive"], date:"2026-07-21", file:"articles/building-guardrails.html" },
+  { id:"01-permission-guardrails", title:"Autonomous Permission Guardrails", summary:"How human-in-the-loop OAuth scopes and Governance-as-Code prevent rogue agentic API loops while maintaining execution speed.", tags:["Security","Governance","Interactive"], date:"2026-07-21", file:"articles/01-permission-guardrails.html" },
+  { id:"02-federated-agent-swarms", title:"The Swarm Architecture", summary:"Moving past single 'God Models' toward specialized multi-agent networks that collaborate on zero-copy data layers.", tags:["Architecture","Multi-Agent","Canvas"], date:"2026-07-18", file:"articles/02-federated-agent-swarms.html" },
+  { id:"03-zero-copy-context", title:"Zero-Copy Data Access", summary:"Why future software won't import your databases—agents will query system data in-place without moving a single byte.", tags:["Data Systems","Privacy","Interactive"], date:"2026-07-15", file:"articles/03-zero-copy-context.html" },
+  { id:"04-intent-translation-layer", title:"The Intent Engine", summary:"Translating natural human goals into structured execution graphs without rigid manual software inputs.", tags:["UX","State Graphs","Simulation"], date:"2026-07-10", file:"articles/04-intent-translation-layer.html" }
+];
 
-    // Persistence layer
-    const getVisited = () => JSON.parse(localStorage.getItem('last_interface_visited') || '[]');
-    window.markVisited = (id) => {
-      const visited = getVisited();
-      if (!visited.includes(id)) {
-        visited.push(id);
-        localStorage.setItem('last_interface_visited', JSON.stringify(visited));
-      }
-    };
+let articles = [];
+let selectedTag = "ALL";
+let openId = null;
 
-    async function initCatalog() {
-      try {
-        const res = await fetch('metadata.json');
-        if (!res.ok) throw new Error('File fetch failed');
-        articles = await res.json();
-      } catch (err) {
-        articles = DEFAULT_ARTICLES;
-      }
-      buildTags();
+const wire = document.getElementById('wire');
+const search = document.getElementById('search');
+const channels = document.getElementById('channels');
+
+const getRead = () => JSON.parse(localStorage.getItem('wire_read') || '[]');
+const markRead = (id) => {
+  const read = getRead();
+  if(!read.includes(id)){ read.push(id); localStorage.setItem('wire_read', JSON.stringify(read)); }
+};
+
+async function init(){
+  try{
+    const res = await fetch('metadata.json');
+    if(!res.ok) throw new Error('fetch failed');
+    const data = await res.json();
+    articles = data.slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  }catch(err){
+    articles = DEFAULT_ARTICLES.slice().sort((a,b)=> new Date(b.date) - new Date(a.date));
+  }
+  buildChannels();
+  render();
+}
+
+function buildChannels(){
+  const tagSet = new Set();
+  articles.forEach(a => a.tags.forEach(t => tagSet.add(t)));
+  tagSet.forEach(tag => {
+    const btn = document.createElement('button');
+    btn.className = 'chan-btn';
+    btn.dataset.tag = tag;
+    btn.textContent = tag;
+    btn.addEventListener('click', () => setChannel(tag, btn));
+    channels.appendChild(btn);
+  });
+  channels.querySelector('[data-tag="ALL"]').addEventListener('click', (e) => setChannel('ALL', e.target));
+}
+
+function setChannel(tag, btn){
+  document.querySelectorAll('.chan-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  selectedTag = tag;
+  render();
+}
+
+function fmtDate(d){
+  const dt = new Date(d + 'T00:00:00');
+  return dt.toLocaleDateString('en-US', { month:'short', day:'2-digit' }).toUpperCase();
+}
+
+function render(){
+  const query = search.value.toLowerCase().trim();
+  const read = getRead();
+
+  const filtered = articles.filter(item => {
+    const matchesSearch = !query ||
+      item.title.toLowerCase().includes(query) ||
+      item.summary.toLowerCase().includes(query) ||
+      item.tags.some(t => t.toLowerCase().includes(query));
+    const matchesTag = selectedTag === "ALL" || item.tags.includes(selectedTag);
+    return matchesSearch && matchesTag;
+  });
+
+  if(filtered.length === 0){
+    wire.innerHTML = `<div class="empty-state">No transmissions match that scan.</div>`;
+    return;
+  }
+
+  wire.innerHTML = filtered.map((item, i) => {
+    const isRead = read.includes(item.id);
+    const isOpen = openId === item.id;
+    return `
+    <div class="entry ${isRead ? 'read' : ''} ${isOpen ? 'open' : ''}" data-id="${item.id}">
+      <button class="entry-head" aria-expanded="${isOpen}">
+        <span class="idx">${String(i+1).padStart(2,'0')}</span>
+        <span class="marker"></span>
+        <span class="headline">${item.title}</span>
+        <span class="date-stamp">${fmtDate(item.date)}</span>
+      </button>
+      <div class="entry-body">
+        <p class="summary">${item.summary}</p>
+        <div class="entry-footer">
+          <div class="tags-row">${item.tags.map(t => `<span>${t}</span>`).join('')}</div>
+          <a class="run-link" href="${item.file}" data-id="${item.file ? item.id : ''}">
+            <span class="pinned-tag">${isRead ? 'read again' : 'run'}</span> →
+          </a>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  wire.querySelectorAll('.entry-head').forEach(head => {
+    head.addEventListener('click', () => {
+      const entry = head.closest('.entry');
+      const id = entry.dataset.id;
+      openId = (openId === id) ? null : id;
       render();
-    }
+    });
+  });
 
-    function buildTags() {
-      const tagSet = new Set();
-      articles.forEach(a => a.tags.forEach(t => tagSet.add(t)));
-      tagSet.forEach(tag => {
-        const btn = document.createElement('button');
-        btn.className = 'tag-btn';
-        btn.dataset.tag = tag;
-        btn.textContent = tag;
-        btn.addEventListener('click', () => {
-          document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          selectedTag = tag;
-          render();
-        });
-        tagsFilter.appendChild(btn);
-      });
+  wire.querySelectorAll('.run-link').forEach(link => {
+    link.addEventListener('click', (e) => {
+      const id = e.currentTarget.dataset.id;
+      if(id) markRead(id);
+    });
+  });
+}
 
-      tagsFilter.querySelector('[data-tag="ALL"]').addEventListener('click', (e) => {
-        document.querySelectorAll('.tag-btn').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
-        selectedTag = "ALL";
-        render();
-      });
-    }
-
-    function render() {
-      const query = search.value.toLowerCase();
-      const visited = getVisited();
-
-      const filtered = articles.filter(item => {
-        const matchesSearch = item.title.toLowerCase().includes(query) || 
-                              item.summary.toLowerCase().includes(query) ||
-                              item.tags.some(t => t.toLowerCase().includes(query));
-        const matchesTag = selectedTag === "ALL" || item.tags.includes(selectedTag);
-        return matchesSearch && matchesTag;
-      });
-
-      catalog.innerHTML = filtered.map(item => `
-        <a class="card ${visited.includes(item.id) ? 'visited' : ''}" href="${item.file}" onclick="markVisited('${item.id}')">
-          <div>
-            <div class="card-header">
-              <div class="card-title">${item.title}</div>
-              <div class="status-dot" title="${visited.includes(item.id) ? 'Explored' : 'Unread'}"></div>
-            </div>
-            <p class="card-summary">${item.summary}</p>
-          </div>
-          <div class="card-footer">
-            <div class="card-tags">
-              ${item.tags.map(t => `<span class="tag">${t}</span>`).join('')}
-            </div>
-            <span class="launch-link">Launch →</span>
-          </div>
-        </a>
-      `).join('');
-    }
-
-    search.addEventListener('input', render);
-
-    // Dynamic background canvas network animation
-    const canvas = document.getElementById('bg-canvas');
-    const ctx = canvas.getContext('2d');
-    let nodes = [];
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-      initNodes();
-    }
-
-    function initNodes() {
-      nodes = [];
-      const count = Math.floor((canvas.width * canvas.height) / 20000);
-      for(let i = 0; i < count; i++) {
-        nodes.push({
-          x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.3,
-          vy: (Math.random() - 0.5) * 0.3,
-          radius: Math.random() * 1.5 + 1
-        });
-      }
-    }
-
-    function drawNodes() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#38bdf8';
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.07)';
-
-      for(let i = 0; i < nodes.length; i++) {
-        let n = nodes[i];
-        n.x += n.vx;
-        n.y += n.vy;
-
-        if(n.x < 0 || n.x > canvas.width) n.vx *= -1;
-        if(n.y < 0 || n.y > canvas.height) n.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(n.x, n.y, n.radius, 0, Math.PI * 2);
-        ctx.fill();
-
-        for(let j = i + 1; j < nodes.length; j++) {
-          let n2 = nodes[j];
-          let dist = Math.hypot(n.x - n2.x, n.y - n2.y);
-          if(dist < 130) {
-            ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            ctx.lineTo(n2.x, n2.y);
-            ctx.stroke();
-          }
-        }
-      }
-      requestAnimationFrame(drawNodes);
-    }
-
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-    drawNodes();
-    initCatalog();
-  </script>
+search.addEventListener('input', render);
+init();
+</script>
 </body>
 </html>
