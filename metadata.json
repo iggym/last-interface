@@ -32,12 +32,12 @@
     "file": "articles/boring-agents-2026.html"
   },
   {
-    "id": "03-zero-copy-context",
-    "title": "Zero-Copy Data Access",
-    "summary": "Why future software won't import your databases—agents will query system data in-place without moving a single byte.",
+    "id": "03-agent-advocate",
+    "title": "Your agent is on hold.",
+    "summary": "The question is who gets paid for the wait..",
     "tags": ["Data Systems", "Privacy", "Interactive"],
     "date": "2026-07-15",
-    "file": "articles/03-zero-copy-context.html"
+    "file": "articles/agent-advocate.html"
   },
   {
     "id": "04-remember",
